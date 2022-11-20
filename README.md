@@ -1,0 +1,12 @@
+## ToDo List
+- [x] eslint 配置，抽离 solid部分
+- [ ] less module
+- [ ] 爬虫脚本
+- [ ] vite 解析 json
+- [ ] github action
+- [ ] husky auto trigger
+- [ ] 图片前后合并
+- [ ] 无限滚动
+- [ ] url记录篇章、页数，滚动时自动记录
+- [ ] 网页端、移动端样式区分调研
+- [ ] cdn 加速
