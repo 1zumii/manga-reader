@@ -1,0 +1,1 @@
+import{g as o,o as a,i as s,c as r,t as n}from"./index.3450cacd.js";import{S as c}from"./index.08553ca7.js";const l=n("<div></div>"),p=()=>{const e=o();return a(()=>{console.log(e.id)}),(()=>{const t=l.cloneNode(!0);return s(t,r(c,{})),t})()};export{p as default};
