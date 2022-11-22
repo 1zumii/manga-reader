@@ -1,13 +1,33 @@
+import path from 'path';
 import axios from 'axios';
+import chalk from 'chalk';
+import fs from 'fs-extra';
 import Coder from 'iconv-lite';
 import * as Parser from 'node-html-parser';
 
-type MangaBaseInfo = {
+type MangaChapter = {
+  name: string;
+  total: number;
+}
+
+type MangaInfo = {
   id: string;
   title: string;
   coverUrl: string;
+  chapters: MangaChapter[];
 }
 
+/**
+ *
+ * @param n number need to format
+ * @param digit result total digits
+ *
+ * @example
+ * ```js
+ * const result = formatNumber(1, 3)
+ * result -> '001'
+ * ```
+ */
 const formatNumber = (n: number, digit: number): string => {
   if (n.toString().length > digit) return n.toString();
   const difference = digit - n.toString().length;
@@ -19,25 +39,12 @@ const ORIGIN = 'https://www.cartoonmad.com';
 const API = {
   allManga: '/comic99.html',
   getMangaList: (pageIndex: number): string => `/comic99.${formatNumber(pageIndex, 2)}.html`,
+  getMangaChapterList: (id: string): string => `/comic/${id}.html`,
 };
 
-const getMangaListPageCount = async (): Promise<number> => {
-  const response = await axios<string>({
-    url: API.allManga,
-    method: 'get',
-    baseURL: ORIGIN,
-    headers: { 'Accept-Language': 'zh-CN,zh;q=0.8' },
-  });
-  if (response.status !== 200) return 0;
-
-  const doc = Parser.parse(response.data);
-  const pageItemElements = doc.querySelectorAll('table[width="728"] td[align="center"] > a');
-  return pageItemElements.length;
-};
-
-const queryMangaList = async (pageIndex: number): Promise<MangaBaseInfo[]> => {
+const fetchBig5HtmlDocument = async (url: string): Promise<Parser.HTMLElement | undefined> => {
   const response = await axios<Buffer>({
-    url: API.getMangaList(pageIndex),
+    url,
     method: 'get',
     baseURL: ORIGIN,
     headers: { 'Accept-Language': 'zh-CN,zh;q=0.8' },
@@ -50,12 +57,54 @@ const queryMangaList = async (pageIndex: number): Promise<MangaBaseInfo[]> => {
     responseEncoding: 'binary',
     responseType: 'arraybuffer',
   });
-  if (response.status !== 200) return [];
+  if (response.status !== 200) return undefined;
 
-  const doc = Parser.parse(
+  return Parser.parse(
     Coder.decode(response.data, 'big5'),
   );
-  const mangaInfoList = doc
+};
+
+const getMangaListPageCount = async (): Promise<number> => {
+  const doc = await fetchBig5HtmlDocument(API.allManga);
+  if (!doc) return 0;
+
+  const pageItemElements = doc.querySelectorAll('table[width="728"] td[align="center"] > a');
+  return pageItemElements.length;
+};
+
+const queryMangaChapterList = async (
+  id: string,
+  onSuccess?: (resultChapters: MangaChapter[]) => void,
+): Promise<MangaChapter[]> => {
+  const doc = await fetchBig5HtmlDocument(API.getMangaChapterList(id));
+  if (!doc) return [];
+
+  const chapters = doc
+    .querySelectorAll('table[width="800"][align="center"] td:has(font)')
+    .map((e): MangaChapter | undefined => {
+      const aElement = e.querySelector('a');
+      const fontElement = e.querySelector('font');
+      if (!aElement || !fontElement) return undefined;
+
+      const name = aElement.innerHTML;
+      const totalRegExpResult = fontElement.innerHTML.match(/(\d+)/);
+      if (!totalRegExpResult) return undefined;
+      const total = Number(totalRegExpResult[1]);
+
+      return { name, total };
+    })
+    .filter((i): i is MangaChapter => !!i);
+
+  onSuccess?.(chapters);
+
+  return chapters;
+};
+
+const queryMangaList = async (pageIndex: number): Promise<MangaInfo[]> => {
+  const doc = await fetchBig5HtmlDocument(API.getMangaList(pageIndex));
+  if (!doc) return [];
+
+  const results = await Promise.allSettled(doc
     .querySelectorAll(
       [
         'td[valign="top"]', '>', 'table[width="890"]',
@@ -63,27 +112,45 @@ const queryMangaList = async (pageIndex: number): Promise<MangaBaseInfo[]> => {
         'table[width="860"]', 'td[align="center"]', '>', 'table', 'td', '>', 'a',
       ].join(' '),
     )
-    .map((e): MangaBaseInfo | undefined => {
+    .map(async (e): Promise<MangaInfo> => {
       // id
       const attrRegExpResult = e.attributes.href.match(/^comic\/(\d+)\.html$/);
-      if (!attrRegExpResult) return undefined;
+      if (!attrRegExpResult) throw new Error('MangaInfo: attributes.href matches no id');
       const id = attrRegExpResult[1];
 
       // title
-      if (!e.attributes.title) return undefined;
+      if (!e.attributes.title) throw new Error('MangaInfo: attributes.title not found');
       const title = e.attributes.title.trim();
 
       // coverUrl
       const coverImageElement = e.querySelector('img');
-      if (!coverImageElement || !coverImageElement.attributes.src) return undefined;
+      if (!coverImageElement || !coverImageElement.attributes.src) throw new Error('MangaInfo: cover image not found');
+
+      // chapters
+      const chapters = await queryMangaChapterList(
+        id,
+        (resultChapters) => {
+          console.log(chalk.bgGreen(' DONE '), chalk.magenta(title), resultChapters.length);
+        },
+      );
 
       return {
         id,
         title,
+        chapters,
         coverUrl: coverImageElement.attributes.src,
       };
+    }));
+
+  const mangaInfoList = results
+    .map((p) => {
+      if (p.status === 'rejected') {
+        console.error(p.reason);
+        return undefined;
+      }
+      return p.value;
     })
-    .filter((e): e is MangaBaseInfo => !!e);
+    .filter((i): i is MangaInfo => !!i);
 
   return mangaInfoList;
 };
@@ -95,21 +162,29 @@ const queryMangaList = async (pageIndex: number): Promise<MangaBaseInfo[]> => {
       .fill(NaN)
       .map((_, i) => queryMangaList(i + 1)),
   );
+
   const mangaInfoList = results
-    .map((p): MangaBaseInfo[] | undefined => {
+    .map((p): MangaInfo[] | undefined => {
       if (p.status === 'rejected') {
         console.error(p.reason);
         return undefined;
       }
       return p.value;
     })
-    .filter((i): i is MangaBaseInfo[] => !!i)
+    .filter((i): i is MangaInfo[] => !!i)
     .flat(1);
-  // DEBUG:
-  console.log(mangaInfoList.length);
-  mangaInfoList.forEach((e) => {
-    console.log(e);
-  });
 
-  // TODO: write to json
+  try {
+    const jsonFilePath = path.resolve('src/data/manga-info.json');
+    await fs.writeFile(
+      jsonFilePath,
+      JSON.stringify(mangaInfoList, null, 2),
+    );
+
+    console.log('\n');
+    console.log(chalk.bgGreen(' DONE '), 'write JSON');
+  } catch (error) {
+    console.error('\n');
+    console.error(chalk.bgRed(' ERROR '), 'write JSON failed');
+  }
 })();

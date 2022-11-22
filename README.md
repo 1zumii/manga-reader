@@ -1,7 +1,9 @@
 ## ToDo List
 - [x] eslint 配置，抽离 solid部分
 - [ ] less module
-- [ ] 爬虫脚本
+- [x] 爬虫脚本
+  - [x] base info
+  - [x] chapter list
 - [ ] vite 解析 json
 - [ ] github action
 - [ ] husky auto trigger
