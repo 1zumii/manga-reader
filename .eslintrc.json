@@ -9,7 +9,7 @@
     ],
     "extends": [
         "airbnb-base",
-        "./.eslintrc-solid.json"
+        "./.eslintrc.solid.json"
     ],
     "parserOptions": {
         "project": [
