@@ -37,7 +37,7 @@ const Home: Component = () => {
 
   return (
     <div class={styles.home}>
-      <SearchPanel onSearch={handleSearch} />
+      <SearchPanel class={styles.searchPanel} onSearch={handleSearch} />
       { renderMangaBaseInfoList() }
     </div>
   );
