@@ -7,7 +7,7 @@
 - [x] base route
 - [x] vite 解析 json
 - [ ] github action
-- [ ] husky auto trigger
+- [x] git-hook auto trigger build and deploy
 - [ ] 图片前后合并
 - [ ] 无限滚动
 - [ ] url记录篇章、页数，滚动时自动记录
