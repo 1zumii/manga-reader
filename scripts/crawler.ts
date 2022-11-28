@@ -4,6 +4,7 @@ import chalk from 'chalk';
 import fs from 'fs-extra';
 import Coder from 'iconv-lite';
 import * as Parser from 'node-html-parser';
+import { OpenCC } from 'opencc';
 
 type MangaChapter = {
   name: string;
@@ -42,6 +43,8 @@ const API = {
   getMangaChapterList: (id: string): string => `/comic/${id}.html`,
 };
 
+const converter = new OpenCC('t2s.json');
+
 const fetchBig5HtmlDocument = async (url: string): Promise<Parser.HTMLElement | undefined> => {
   const response = await axios<Buffer>({
     url,
@@ -60,7 +63,9 @@ const fetchBig5HtmlDocument = async (url: string): Promise<Parser.HTMLElement | 
   if (response.status !== 200) return undefined;
 
   return Parser.parse(
-    Coder.decode(response.data, 'big5'),
+    converter.convertSync(
+      Coder.decode(response.data, 'big5'),
+    ),
   );
 };
 
@@ -104,43 +109,45 @@ const queryMangaList = async (pageIndex: number): Promise<MangaInfo[]> => {
   const doc = await fetchBig5HtmlDocument(API.getMangaList(pageIndex));
   if (!doc) return [];
 
-  const results = await Promise.allSettled(doc
-    .querySelectorAll(
-      [
-        'td[valign="top"]', '>', 'table[width="890"]',
-        'tr', '>', 'td[align="right"]', '>', 'table[width="890"]',
-        'table[width="860"]', 'td[align="center"]', '>', 'table', 'td', '>', 'a',
-      ].join(' '),
-    )
-    .map(async (e): Promise<MangaInfo> => {
-      // id
-      const attrRegExpResult = e.attributes.href.match(/^comic\/(\d+)\.html$/);
-      if (!attrRegExpResult) throw new Error('MangaInfo: attributes.href matches no id');
-      const id = attrRegExpResult[1];
+  const results = await Promise.allSettled(
+    doc
+      .querySelectorAll(
+        [
+          'td[valign="top"]', '>', 'table[width="890"]',
+          'tr', '>', 'td[align="right"]', '>', 'table[width="890"]',
+          'table[width="860"]', 'td[align="center"]', '>', 'table', 'td', '>', 'a',
+        ].join(' '),
+      )
+      .map(async (e): Promise<MangaInfo> => {
+        // id
+        const attrRegExpResult = e.attributes.href.match(/^comic\/(\d+)\.html$/);
+        if (!attrRegExpResult) throw new Error('MangaInfo: attributes.href matches no id');
+        const id = attrRegExpResult[1];
 
-      // title
-      if (!e.attributes.title) throw new Error('MangaInfo: attributes.title not found');
-      const title = e.attributes.title.trim();
+        // title
+        if (!e.attributes.title) throw new Error('MangaInfo: attributes.title not found');
+        const title = e.attributes.title.trim();
 
-      // coverUrl
-      const coverImageElement = e.querySelector('img');
-      if (!coverImageElement || !coverImageElement.attributes.src) throw new Error('MangaInfo: cover image not found');
+        // coverUrl
+        const coverImageElement = e.querySelector('img');
+        if (!coverImageElement || !coverImageElement.attributes.src) throw new Error('MangaInfo: cover image not found');
 
-      // chapters
-      const chapters = await queryMangaChapterList(
-        id,
-        (resultChapters) => {
-          console.log(chalk.bgGreen(' DONE '), chalk.magenta(title), resultChapters.length);
-        },
-      );
+        // chapters
+        const chapters = await queryMangaChapterList(
+          id,
+          (resultChapters) => {
+            console.log(chalk.bgGreen(' DONE '), chalk.magenta(title), resultChapters.length);
+          },
+        );
 
-      return {
-        id,
-        title,
-        chapters,
-        coverUrl: coverImageElement.attributes.src,
-      };
-    }));
+        return {
+          id,
+          title,
+          chapters,
+          coverUrl: coverImageElement.attributes.src,
+        };
+      }),
+  );
 
   const mangaInfoList = results
     .map((p) => {

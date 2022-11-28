@@ -146,7 +146,7 @@
             }
         ],
         // https://github.com/jsx-eslint/eslint-plugin-react/blob/master/docs/rules/jsx-no-constructed-context-values.md
-        "react/jsx-no-constructed-context-values": "error",
+        // "react/jsx-no-constructed-context-values": "error",
         /** 
          * turn off some j11x rules
          */

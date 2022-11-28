@@ -10,4 +10,16 @@ export default defineConfig({
   build: {
     target: 'esnext',
   },
+  resolve: {
+    alias: [
+      { find: '$components', replacement: '/src/components' },
+      { find: '$pages', replacement: '/src/pages' },
+      { find: '$src', replacement: '/src' },
+    ],
+  },
+  css: {
+    modules: {
+      localsConvention: 'camelCaseOnly',
+    },
+  },
 });

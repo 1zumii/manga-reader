@@ -1,23 +1,44 @@
-import type { Component, JSX } from 'solid-js';
 import { For } from 'solid-js';
-import logo from './logo.svg';
-import styles from './style.module.css';
+import type { Component, JSX } from 'solid-js';
+import SearchPanel from '$components/search-panel';
+import UrlTransformer from '$src/data/url-transformer';
+import { useMangaList } from './use-manga-list';
+import styles from './style.module.less';
 
 const Home: Component = () => {
-  const renderChapter = (): JSX.Element => {
-    const url = 'https://www.cartoonmad.com/5e585/7654/152/';
-    const pages = new Array(9).fill(0).map((_, i) => `00${i + 1}.jpg`);
-    return (
-      <For each={pages}>
-        { (page) => <img src={`${url}${page}`} alt={`test-${page}`} /> }
+  const { mangaList, onSearch: handleSearch } = useMangaList();
+
+  const renderMangaBaseInfoList = (): JSX.Element => (
+    <div class={styles.baseInfoList}>
+      <For each={mangaList()}>
+        { ({
+          id, title, coverUrl, chapters,
+        }) => {
+          const latestChapter = chapters[chapters.length - 1];
+          return (
+            <div class={styles.card}>
+              <img
+                class={styles.cover}
+                src={UrlTransformer.getCover(coverUrl)}
+                alt={`cover-${id}`}
+              />
+              <div class={styles.title} title={title}>{ title }</div>
+              <div class={styles.description}>
+                更新至「
+                { latestChapter.name }
+                」
+              </div>
+            </div>
+          );
+        } }
       </For>
-    );
-  };
+    </div>
+  );
 
   return (
     <div class={styles.home}>
-      <img src={logo} class={styles.logo} alt="logo" />
-      { renderChapter() }
+      <SearchPanel onSearch={handleSearch} />
+      { renderMangaBaseInfoList() }
     </div>
   );
 };

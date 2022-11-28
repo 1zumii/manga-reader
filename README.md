@@ -1,10 +1,11 @@
 ## ToDo List
 - [x] eslint 配置，抽离 solid部分
-- [ ] less module
+- [x] less module
 - [x] 爬虫脚本
   - [x] base info
   - [x] chapter list
-- [ ] vite 解析 json
+- [x] base route
+- [x] vite 解析 json
 - [ ] github action
 - [ ] husky auto trigger
 - [ ] 图片前后合并

@@ -26,7 +26,7 @@
             }
         },
         // 用于指明 import/order 中，哪些属于内部导入模块
-        "import/internal-regex": "^$(src|components|utils)/"
+        "import/internal-regex": "^$(src|components|pages)/"
     },
     "rules": {
         "no-unused-vars": "off",
@@ -108,7 +108,18 @@
                     "order": "asc"
                 },
                 // 中间不允许空行
-                "newlines-between": "never"
+                "newlines-between": "never",
+                // 处理样式文件
+                "pathGroups": [
+                    {
+                        "pattern": "*.module.less",
+                        "group": "object",
+                        "patternOptions": {
+                            "matchBase": true
+                        },
+                        "position": "before"
+                    }
+                ]
             }
         ]
     }
