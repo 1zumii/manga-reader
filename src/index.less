@@ -5,9 +5,13 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-#root {
+.flex-width() {
   max-width: 960px;
   min-width: 320px;
+}
+
+#root {
+  .flex-width();
   margin: 0 auto;
 }
 

@@ -43,6 +43,8 @@ const API = {
   getMangaChapterList: (id: string): string => `/comic/${id}.html`,
 };
 
+const HIGHER_PRIORITY_MANGA = ['咒术回战', '鬼灭之刃', '进击的巨人'];
+
 const converter = new OpenCC('t2s.json');
 
 const fetchBig5HtmlDocument = async (url: string): Promise<Parser.HTMLElement | undefined> => {
@@ -179,7 +181,24 @@ const queryMangaList = async (pageIndex: number): Promise<MangaInfo[]> => {
       return p.value;
     })
     .filter((i): i is MangaInfo[] => !!i)
-    .flat(1);
+    .flat(1)
+    .sort((a, b) => {
+      let orderA: number = 0;
+      let orderB: number = 0;
+
+      if (HIGHER_PRIORITY_MANGA.some((title) => a.title.includes(title))) {
+        orderA += 1;
+      }
+      if (HIGHER_PRIORITY_MANGA.some((title) => b.title.includes(title))) {
+        orderB += 1;
+      }
+      if (Number(a.id) <= Number(b.id)) {
+        orderA += 1;
+      } else {
+        orderB += 1;
+      }
+      return orderB - orderA;
+    });
 
   try {
     const jsonFilePath = path.resolve('src/data/manga-info.json');

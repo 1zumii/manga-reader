@@ -9,10 +9,6 @@ const routes: RouteDefinition[] = [
     component: lazy(() => import('./pages/home')),
   },
   {
-    path: '/detail/:id',
-    component: lazy(() => import('./pages/detail')),
-  },
-  {
     path: '/read/:id/:chapterNum',
     component: lazy(() => import('./pages/reader')),
   },

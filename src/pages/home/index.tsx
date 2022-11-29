@@ -1,28 +1,47 @@
-import { For } from 'solid-js';
+import { createSignal, For } from 'solid-js';
 import type { Component, JSX } from 'solid-js';
-import SearchPanel from '$components/search-panel';
 import UrlTransformer from '$src/data/url-transformer';
-import { useMangaList } from './use-manga-list';
+import useData, { MangaInfo } from '$src/data/use-data';
+import MangaDetailDrawer from './components/detail-drawer';
+import SearchPanel from './components/search-panel';
 import styles from './style.module.less';
 
+const DEFAULT_MANGA_LIST = useData();
+
 const Home: Component = () => {
-  const { mangaList, onSearch: handleSearch } = useMangaList();
+  const [mangaList, setMangaList] = createSignal(DEFAULT_MANGA_LIST);
+  const [currentMangaDetail, setCurrentMangaDetail] = createSignal<MangaInfo | undefined>();
+
+  const handleSearch = (searchValue: string): void => {
+    if (!searchValue) {
+      setMangaList(DEFAULT_MANGA_LIST);
+      return;
+    }
+    const nextMangaList = mangaList().filter(({ title }) => title.includes(searchValue));
+    setMangaList(nextMangaList);
+  };
+
+  const openMangaDetail = (info: MangaInfo): void => {
+    setCurrentMangaDetail(info);
+  };
+
+  const closeMangaDetail = (): void => {
+    setCurrentMangaDetail(undefined);
+  };
 
   const renderMangaBaseInfoList = (): JSX.Element => (
     <div class={styles.baseInfoList}>
       <For each={mangaList()}>
-        { ({
-          id, title, coverUrl, chapters,
-        }) => {
-          const latestChapter = chapters[chapters.length - 1];
+        { (info) => {
+          const latestChapter = info.chapters[info.chapters.length - 1];
           return (
-            <div class={styles.card}>
+            <div class={styles.card} onClick={[openMangaDetail, info]}>
               <img
                 class={styles.cover}
-                src={UrlTransformer.getCover(coverUrl)}
-                alt={`cover-${id}`}
+                src={UrlTransformer.getCover(info.coverUrl)}
+                alt={`cover-${info.id}`}
               />
-              <div class={styles.title} title={title}>{ title }</div>
+              <div class={styles.title} title={info.title}>{ info.title }</div>
               <div class={styles.description}>
                 更新至「
                 { latestChapter.name }
@@ -39,6 +58,11 @@ const Home: Component = () => {
     <div class={styles.home}>
       <SearchPanel class={styles.searchPanel} onSearch={handleSearch} />
       { renderMangaBaseInfoList() }
+
+      <MangaDetailDrawer
+        info={currentMangaDetail()}
+        onClose={closeMangaDetail}
+      />
     </div>
   );
 };
