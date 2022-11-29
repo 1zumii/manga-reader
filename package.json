@@ -7,7 +7,6 @@
     "dev:script": "ts-node --project tsconfig.script.json scripts/crawler.ts",
     "build": "vite build",
     "build:script": "tsc ./scripts/crawler.ts",
-    "deploy": "gh-pages -d dist",
     "update-hook": "simple-git-hooks",
     "lint": "eslint --ext .js,.ts,.jsx,.tsx ./",
     "lint:fix": "eslint --fix --ext .js,.ts,.jsx,.tsx ./"
@@ -34,7 +33,6 @@
     "eslint-plugin-react": "^7.31.11",
     "eslint-plugin-solid": "^0.8.0",
     "fs-extra": "^10.1.0",
-    "gh-pages": "^4.0.0",
     "iconv-lite": "^0.6.3",
     "less": "^4.1.3",
     "node-html-parser": "^6.1.4",
@@ -46,6 +44,6 @@
     "vite-plugin-solid": "^2.3.0"
   },
   "simple-git-hooks": {
-    "post-commit": "./post-commit-hook.sh"
+    "pre-commit": "pnpm run lint"
   }
 }
