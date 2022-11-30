@@ -14,7 +14,6 @@
 
     .flex-width();
     width: 100%;
-    box-sizing: border-box;
 
     padding: 20px;
     position: fixed;
@@ -40,10 +39,13 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        width: 20%;
+        padding-right: 15px;
+        flex-shrink: 0;
+        max-width: 40%;
 
         img {
             border-radius: 8px;
+            max-width: 100%;
         }
 
         h5 {
@@ -53,7 +55,7 @@
     }
 
     .chapter-list {
-        width: 80%;
+        flex-grow: 1;
         max-height: 100%;
         overflow-y: scroll;
         padding-right: 15px;

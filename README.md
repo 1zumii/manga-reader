@@ -1,15 +1,6 @@
 ## ToDo List
-- [x] eslint 配置，抽离 solid部分
-- [x] less module
-- [x] 爬虫脚本
-  - [x] base info
-  - [x] chapter list
-- [x] base route
-- [x] vite 解析 json
-- [ ] github action 部署到 ali oss
-- [x] git-hook auto trigger build and deploy
+- [ ] github action 定时任务
 - [ ] 图片前后合并
 - [ ] 无限滚动
 - [ ] url记录篇章、页数，滚动时自动记录
-- [x] 网页端、移动端样式区分调研
 - [ ] cdn 加速
