@@ -8,7 +8,6 @@ export type MangaChapter = {
 export type MangaInfo = {
   id: string;
   title: string;
-  coverUrl: string;
   chapters: MangaChapter[];
 }
 

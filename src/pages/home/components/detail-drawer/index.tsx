@@ -29,7 +29,7 @@ const MangaDetailDrawer: Component<Props> = (props) => {
         { !!props.info && (
         <div class={styles.detailDrawer}>
           <div class={styles.briefInfo}>
-            <img src={UrlTransformer.getCover(props.info.coverUrl)} alt="cover" />
+            <img src={UrlTransformer.getCover(props.info.id)} alt="cover" />
             <h5>{ props.info.title }</h5>
           </div>
           <div class={styles.chapterList}>{ renderChapterList() }</div>

@@ -38,7 +38,7 @@ const Home: Component = () => {
             <div class={styles.card} onClick={[openMangaDetail, info]}>
               <img
                 class={styles.cover}
-                src={UrlTransformer.getCover(info.coverUrl)}
+                src={UrlTransformer.getCover(info.id)}
                 alt={`cover-${info.id}`}
               />
               <div class={styles.title} title={info.title}>{ info.title }</div>

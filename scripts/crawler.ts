@@ -14,7 +14,6 @@ type MangaChapter = {
 type MangaInfo = {
   id: string;
   title: string;
-  coverUrl: string;
   chapters: MangaChapter[];
 }
 
@@ -130,10 +129,6 @@ const queryMangaList = async (pageIndex: number): Promise<MangaInfo[]> => {
         if (!e.attributes.title) throw new Error('MangaInfo: attributes.title not found');
         const title = e.attributes.title.trim();
 
-        // coverUrl
-        const coverImageElement = e.querySelector('img');
-        if (!coverImageElement || !coverImageElement.attributes.src) throw new Error('MangaInfo: cover image not found');
-
         // chapters
         const chapters = await queryMangaChapterList(
           id,
@@ -142,12 +137,7 @@ const queryMangaList = async (pageIndex: number): Promise<MangaInfo[]> => {
           },
         );
 
-        return {
-          id,
-          title,
-          chapters,
-          coverUrl: coverImageElement.attributes.src,
-        };
+        return { id, title, chapters };
       }),
   );
 
@@ -201,14 +191,14 @@ const queryMangaList = async (pageIndex: number): Promise<MangaInfo[]> => {
     });
 
   try {
-    const jsonFilePath = path.resolve('src/data/manga-info.json');
+    const jsonFilePath = path.resolve('manga-info.json'); // output to project root folder
     await fs.writeFile(
       jsonFilePath,
       JSON.stringify(mangaInfoList, null, 2),
     );
 
     console.log('\n');
-    console.log(chalk.bgGreen(' DONE '), 'write JSON');
+    console.log(chalk.bgGreen(' DONE '), 'write JSON', chalk.cyan(mangaInfoList.length));
   } catch (error) {
     console.error('\n');
     console.error(chalk.bgRed(' ERROR '), 'write JSON failed');

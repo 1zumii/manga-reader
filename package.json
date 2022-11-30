@@ -6,7 +6,7 @@
     "dev": "vite --host",
     "dev:script": "ts-node --project tsconfig.script.json scripts/crawler.ts",
     "build": "vite build",
-    "build:script": "tsc ./scripts/crawler.ts",
+    "build:script": "tsc --project tsconfig.script.json",
     "update-hook": "simple-git-hooks",
     "lint": "eslint --ext .js,.ts,.jsx,.tsx ./",
     "lint:fix": "eslint --fix --ext .js,.ts,.jsx,.tsx ./"

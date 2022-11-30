@@ -1,5 +1,5 @@
 const ORIGIN = 'https://www.cartoonmad.com';
 
-const getCover = (path: string): string => `${ORIGIN}${path}`;
+const getCover = (id: string): string => `${ORIGIN}/cartoonimg/coimg/${id}.jpg`;
 
 export default { getCover };
