@@ -31,4 +31,4 @@ jobs:
       - 
         name: update
         # need to authorize the user of those access keys above, with the write/read operations
-        run: ossutil cp -f ./manga-info.json oss://${{ secrets.ALI_OSS_BUCKET }}/manga-info.json
+        run: ossutil cp -f ./manga-info.json oss://${{ secrets.ALI_OSS_BUCKET }}/manga-info.json --acl public-read
