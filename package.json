@@ -11,8 +11,6 @@
     "lint": "eslint --ext .js,.ts,.jsx,.tsx ./",
     "lint:fix": "eslint --fix --ext .js,.ts,.jsx,.tsx ./"
   },
-  "keywords": [],
-  "author": "",
   "license": "MIT",
   "dependencies": {
     "@solidjs/router": "^0.5.1",

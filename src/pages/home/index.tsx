@@ -1,33 +1,50 @@
 import { createSignal, For } from 'solid-js';
 import type { Component, JSX } from 'solid-js';
 import UrlTransformer from '$src/data/url-transformer';
-import useData, { MangaInfo } from '$src/data/use-data';
+import { MangaInfo, useMangaInfo } from '$src/data/use-manga-info';
 import MangaDetailDrawer from './components/detail-drawer';
 import SearchPanel from './components/search-panel';
 import styles from './style.module.less';
 
-const DEFAULT_MANGA_LIST = useData();
+const useMangaListWithSearch = () => {
+  const mangaListResource = useMangaInfo();
+  const allMangaList = () => mangaListResource() ?? [];
 
-const Home: Component = () => {
-  const [mangaList, setMangaList] = createSignal(DEFAULT_MANGA_LIST);
-  const [currentMangaDetail, setCurrentMangaDetail] = createSignal<MangaInfo | undefined>();
+  const [searchResult, setSearchResult] = createSignal(allMangaList());
 
   const handleSearch = (searchValue: string): void => {
     if (!searchValue) {
-      setMangaList(DEFAULT_MANGA_LIST);
+      setSearchResult(allMangaList());
       return;
     }
-    const nextMangaList = mangaList().filter(({ title }) => title.includes(searchValue));
-    setMangaList(nextMangaList);
+    const nextMangaList = (allMangaList()).filter(({ title }) => title.includes(searchValue));
+    setSearchResult(nextMangaList);
   };
 
-  const openMangaDetail = (info: MangaInfo): void => {
-    setCurrentMangaDetail(info);
+  return { mangaList: searchResult, isLoading: mangaListResource.loading, handleSearch };
+};
+
+const useDetailDrawer = () => {
+  const [currentDetail, setCurrentDetail] = createSignal<MangaInfo | undefined>();
+
+  const openDrawer = (info: MangaInfo): void => {
+    setCurrentDetail(info);
   };
 
-  const closeMangaDetail = (): void => {
-    setCurrentMangaDetail(undefined);
+  const closeDrawer = (): void => {
+    setCurrentDetail(undefined);
   };
+
+  return { currentDetail, openDrawer, closeDrawer };
+};
+
+const Home: Component = () => {
+  const { mangaList, handleSearch } = useMangaListWithSearch();
+  const {
+    currentDetail: currentMangaDetail,
+    openDrawer: openMangaDetailDrawer,
+    closeDrawer: closeMangaDetailDrawer,
+  } = useDetailDrawer();
 
   const renderMangaBaseInfoList = (): JSX.Element => (
     <div class={styles.baseInfoList}>
@@ -35,7 +52,7 @@ const Home: Component = () => {
         { (info) => {
           const latestChapter = info.chapters[info.chapters.length - 1];
           return (
-            <div class={styles.card} onClick={[openMangaDetail, info]}>
+            <div class={styles.card} onClick={[openMangaDetailDrawer, info]}>
               <img
                 class={styles.cover}
                 src={UrlTransformer.getCover(info.id)}
@@ -61,7 +78,7 @@ const Home: Component = () => {
 
       <MangaDetailDrawer
         info={currentMangaDetail()}
-        onClose={closeMangaDetail}
+        onClose={closeMangaDetailDrawer}
       />
     </div>
   );

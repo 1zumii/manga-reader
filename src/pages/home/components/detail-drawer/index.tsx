@@ -3,7 +3,7 @@ import {
 } from 'solid-js';
 import { Portal } from 'solid-js/web';
 import UrlTransformer from '$src/data/url-transformer';
-import { MangaInfo } from '$src/data/use-data';
+import { MangaChapter, MangaInfo } from '$src/data/use-manga-info';
 import styles from './style.module.less';
 
 type Props = {
@@ -16,8 +16,8 @@ const MangaDetailDrawer: Component<Props> = (props) => {
     props.onClose();
   };
 
-  const renderChapterList = (): JSX.Element => (
-    <For each={props.info!.chapters}>
+  const renderChapterList = (chapters: MangaChapter[]): JSX.Element => (
+    <For each={chapters}>
       { ({ name }) => <div class={styles.chapter}>{ name }</div> }
     </For>
   );
@@ -26,15 +26,13 @@ const MangaDetailDrawer: Component<Props> = (props) => {
     <Portal mount={document.getElementById('root') ?? undefined}>
       <Show when={props.info}>
         <div class={styles.bgMask} onClick={handleClose} />
-        { !!props.info && (
         <div class={styles.detailDrawer}>
           <div class={styles.briefInfo}>
-            <img src={UrlTransformer.getCover(props.info.id)} alt="cover" />
-            <h5>{ props.info.title }</h5>
+            <img src={UrlTransformer.getCover(props.info!.id)} alt="cover" />
+            <h5>{ props.info!.title }</h5>
           </div>
-          <div class={styles.chapterList}>{ renderChapterList() }</div>
+          <div class={styles.chapterList}>{ renderChapterList(props.info!.chapters) }</div>
         </div>
-        ) }
       </Show>
     </Portal>
   );
