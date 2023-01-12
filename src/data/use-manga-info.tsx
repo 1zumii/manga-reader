@@ -13,7 +13,7 @@ export type MangaInfo = {
   chapters: MangaChapter[];
 }
 
-const OSS_BUCKET: string = import.meta.env.VITE_ALI_OSS_BUCKET;
+const OSS_BUCKET: string = import.meta.env.VITE_ALI_OSS_BUCKET_URL;
 const DATA_FILE: string = 'manga-info.json';
 
 const fetchMangaInfoFromAliOss = async (): Promise<MangaInfo[]> => {

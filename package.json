@@ -6,6 +6,7 @@
     "dev": "vite --host",
     "dev:script": "ts-node --project tsconfig.script.json scripts/crawler.ts",
     "build": "vite build",
+    "preview": "vite preview --port 7900",
     "build:script": "tsc --project tsconfig.script.json",
     "update-hook": "simple-git-hooks",
     "lint": "eslint --ext .js,.ts,.jsx,.tsx ./",

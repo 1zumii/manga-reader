@@ -6,6 +6,8 @@ on:
       - main
 permissions:
   contents: write
+env: 
+  VITE_ALI_OSS_BUCKET_URL: ${{secrets.ALI_OSS_BUCKET_URL}}
 jobs: 
   deploy:
     runs-on: ubuntu-latest
@@ -18,6 +20,9 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16
+      -
+        name: setup env
+        uses: iamsauravsharma/create-dotenv@v1.2.2
       - 
         name: build
         run: |
