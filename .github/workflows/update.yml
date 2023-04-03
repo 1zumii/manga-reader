@@ -20,7 +20,7 @@ jobs:
         run: |
           npm install
           npm run build:script
-          node dist/scripts/crawler.js
+          node dist/scripts/data/crawler.js
       -
         name: setup ali-oss
         uses: manyuanrong/setup-ossutil@master

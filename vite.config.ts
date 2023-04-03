@@ -14,6 +14,8 @@ export default defineConfig({
     alias: [
       { find: '$components', replacement: '/src/components' },
       { find: '$pages', replacement: '/src/pages' },
+      { find: '$utils', replacement: '/src/utils' },
+      { find: '$types', replacement: '/src/types' },
       { find: '$src', replacement: '/src' },
     ],
   },

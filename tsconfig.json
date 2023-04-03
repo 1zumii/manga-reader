@@ -22,6 +22,12 @@
       "$pages/*": [
         "src/pages/*"
       ],
+      "$utils/*": [
+        "src/utils/*"
+      ],
+      "$types/*": [
+        "src/types/*"
+      ],
       "$src/*": [
         "src/*"
       ],

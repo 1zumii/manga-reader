@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import path from 'path';
 import axios from 'axios';
 import chalk from 'chalk';
@@ -5,34 +6,12 @@ import fs from 'fs-extra';
 import Coder from 'iconv-lite';
 import * as Parser from 'node-html-parser';
 import { OpenCC } from 'opencc';
-
-type MangaChapter = {
-  name: string;
-  total: number;
-}
-
-type MangaInfo = {
-  id: string;
-  title: string;
-  chapters: MangaChapter[];
-}
-
-/**
- *
- * @param n number need to format
- * @param digit result total digits
- *
- * @example
- * ```js
- * const result = formatNumber(1, 3)
- * result -> '001'
- * ```
- */
-const formatNumber = (n: number, digit: number): string => {
-  if (n.toString().length > digit) return n.toString();
-  const difference = digit - n.toString().length;
-  return `${'0'.repeat(difference)}${n}`;
-};
+// do not use path alias provided by vite like `$src`
+// because this script will be compiled by `tsc` and run by node
+// `tsc` doesn't convert path alias. for more read: https://typestrong.org/ts-node/docs/paths#why-is-this-not-built-in-to-ts-node
+import { DATA_FILE } from '../constants';
+import { MangaChapter, MangaInfo } from '../types/manga';
+import formatNumber from '../utils/format-number';
 
 const ORIGIN = 'https://www.cartoonmad.com';
 
@@ -93,13 +72,23 @@ const queryMangaChapterList = async (
       if (!aElement || !fontElement) return undefined;
 
       const name = aElement.innerHTML;
+
+      const indexRegExpResult = name.match(/(\d+)/);
+      if (!indexRegExpResult) return undefined;
+      const index = Number(indexRegExpResult[0]);
+
       const totalRegExpResult = fontElement.innerHTML.match(/(\d+)/);
       if (!totalRegExpResult) return undefined;
       const total = Number(totalRegExpResult[1]);
 
-      return { name, total };
+      return { name, total, index };
     })
-    .filter((i): i is MangaChapter => !!i);
+    .filter((chapter): chapter is MangaChapter => !!chapter)
+    .map((chapter, arrayIndex, array) => ({
+      ...chapter,
+      prevIndex: array[arrayIndex - 1]?.index,
+      nextIndex: array[arrayIndex + 1]?.index,
+    }));
 
   onSuccess?.(chapters);
 
@@ -191,7 +180,7 @@ const queryMangaList = async (pageIndex: number): Promise<MangaInfo[]> => {
     });
 
   try {
-    const jsonFilePath = path.resolve('manga-info.json'); // output to project root folder
+    const jsonFilePath = path.resolve(DATA_FILE); // output to project root folder
     await fs.writeFile(
       jsonFilePath,
       JSON.stringify(mangaInfoList, null, 2),

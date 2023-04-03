@@ -1,0 +1,32 @@
+@import '$src/index.less';
+
+.image {
+    width: 100%;
+    position: relative;
+
+    & > img {
+        width: 100%;
+    }
+
+    &.loading {
+        height: 0;
+        padding-bottom: 145%; // assume ratio of h & w is `1.45 : 1`
+
+        &::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background-color: fade(blue, 10%);
+            #background-blur(5px);
+            z-index: 10;
+            background-image: url('../../assets/spin.svg');
+            background-position: center center;
+            background-repeat: no-repeat;
+        }
+    }
+}

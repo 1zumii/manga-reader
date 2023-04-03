@@ -1,41 +1,29 @@
 import { createSignal, For } from 'solid-js';
 import type { Component, JSX } from 'solid-js';
+import MangaDetailDrawer from '$components/detail-drawer';
+import useDetailDrawer from '$components/detail-drawer/use-detail-drawer';
 import UrlTransformer from '$src/data/url-transformer';
-import { MangaInfo, useMangaInfo } from '$src/data/use-manga-info';
-import MangaDetailDrawer from './components/detail-drawer';
+import { useMangaResource } from '$src/data/use-manga-resource';
+import { MangaInfo } from '$types/manga';
 import SearchPanel from './components/search-panel';
 import styles from './style.module.less';
 
 const useMangaListWithSearch = () => {
-  const mangaListResource = useMangaInfo();
-  const allMangaList = () => mangaListResource() ?? [];
+  const mangaResource = useMangaResource();
+  const mangaListAll = () => mangaResource() ?? [];
 
-  const [searchResult, setSearchResult] = createSignal(allMangaList());
+  const [searchResult, setSearchResult] = createSignal<MangaInfo[]>(mangaListAll());
 
   const handleSearch = (searchValue: string): void => {
     if (!searchValue) {
-      setSearchResult(allMangaList());
+      setSearchResult(mangaListAll());
       return;
     }
-    const nextMangaList = (allMangaList()).filter(({ title }) => title.includes(searchValue));
+    const nextMangaList = (mangaListAll()).filter(({ title }) => title.includes(searchValue));
     setSearchResult(nextMangaList);
   };
 
-  return { mangaList: searchResult, isLoading: mangaListResource.loading, handleSearch };
-};
-
-const useDetailDrawer = () => {
-  const [currentDetail, setCurrentDetail] = createSignal<MangaInfo | undefined>();
-
-  const openDrawer = (info: MangaInfo): void => {
-    setCurrentDetail(info);
-  };
-
-  const closeDrawer = (): void => {
-    setCurrentDetail(undefined);
-  };
-
-  return { currentDetail, openDrawer, closeDrawer };
+  return { mangaList: searchResult, isLoading: mangaResource.loading, handleSearch };
 };
 
 const Home: Component = () => {
@@ -57,6 +45,7 @@ const Home: Component = () => {
                 class={styles.cover}
                 src={UrlTransformer.getCover(info.id)}
                 alt={`cover-${info.id}`}
+                loading="lazy"
               />
               <div class={styles.title} title={info.title}>{ info.title }</div>
               <div class={styles.description}>

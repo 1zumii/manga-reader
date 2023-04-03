@@ -1,22 +1,12 @@
 import {
   createContext, createResource, ParentComponent, Resource, useContext,
 } from 'solid-js';
-
-export type MangaChapter = {
-  name: string;
-  total: number;
-}
-
-export type MangaInfo = {
-  id: string;
-  title: string;
-  chapters: MangaChapter[];
-}
+import { DATA_FILE } from '$src/constants';
+import { MangaInfo } from '$types/manga';
 
 const OSS_BUCKET: string = import.meta.env.VITE_ALI_OSS_BUCKET_URL;
-const DATA_FILE: string = 'manga-info.json';
 
-const fetchMangaInfoFromAliOss = async (): Promise<MangaInfo[]> => {
+const fetchMangaResourceFromAliOss = async (): Promise<MangaInfo[]> => {
   try {
     const response = await fetch(
       `https://${OSS_BUCKET}/${DATA_FILE}`,
@@ -35,14 +25,16 @@ const fetchMangaInfoFromAliOss = async (): Promise<MangaInfo[]> => {
   }
 };
 
+// TODO: maybe there is not need to do so much work,
+// to exclude `undefined` from context default value
 const CONTEXT_DEFAULT_PENDING = (() => undefined) as Resource<MangaInfo[]>;
 CONTEXT_DEFAULT_PENDING.state = 'pending';
 CONTEXT_DEFAULT_PENDING.loading = true;
 const context = createContext<Resource<MangaInfo[]>>(CONTEXT_DEFAULT_PENDING);
 const { Provider } = context;
 
-const MangaInfoProvider: ParentComponent = (props) => {
-  const [data] = createResource(fetchMangaInfoFromAliOss);
+const MangaResourceProvider: ParentComponent = (props) => {
+  const [data] = createResource(fetchMangaResourceFromAliOss);
 
   return (
     <Provider value={data}>
@@ -51,6 +43,6 @@ const MangaInfoProvider: ParentComponent = (props) => {
   );
 };
 
-export const useMangaInfo = () => useContext(context);
+export const useMangaResource = () => useContext(context);
 
-export default MangaInfoProvider;
+export default MangaResourceProvider;

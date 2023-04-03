@@ -2,7 +2,7 @@
 import { Router, useRoutes } from '@solidjs/router';
 import type { Component } from 'solid-js';
 import { render } from 'solid-js/web';
-import MangaInfoProvider from './data/use-manga-info';
+import MangaInfoProvider from './data/use-manga-resource';
 import routes from './router';
 import './index.less';
 

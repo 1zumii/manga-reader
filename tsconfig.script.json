@@ -9,6 +9,6 @@
         ]
     },
     "files": [
-        "./scripts/crawler.ts"
+        "./src/data/crawler.ts"
     ]
 }

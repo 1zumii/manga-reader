@@ -26,7 +26,7 @@
             }
         },
         // 用于指明 import/order 中，哪些属于内部导入模块
-        "import/internal-regex": "^$(src|components|pages)/"
+        "import/internal-regex": "^$(src|components|pages|utils|types)/"
     },
     "rules": {
         "no-unused-vars": "off",

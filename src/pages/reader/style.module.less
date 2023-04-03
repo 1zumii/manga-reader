@@ -1,0 +1,17 @@
+#hide-scroll-bar() {
+    // fire-fox
+    scrollbar-width: none;
+    // IE 10+
+    -ms-overflow-style: none;
+    // chrome, edge
+    &::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+.read-view {
+    height: 100vh;
+    overflow-y: scroll;
+
+    #hide-scroll-bar();
+}
