@@ -76,6 +76,9 @@ const Reader: Component = () => {
     if (!isSamePageImage(currentReading, pageInfo)) return;
 
     /* update current reading page image */
+    // update display pages but no scroll, prevent auto trigger next round update and dead cycle
+    if (currentReadingElementClientTop === boundingClientRect.top) return;
+
     // page's display ratio still not trigger update, just update `clientTop`
     if (intersectionRatio >= TRIGGER_UPDATE_RATIO) {
       currentReadingElementClientTop = boundingClientRect.top;
