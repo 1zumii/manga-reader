@@ -1,58 +1,131 @@
 import {
-  Component, createEffect, JSX, Show,
+  Component, For, Show, onMount,
 } from 'solid-js';
-import PageImage from '$components/page-image';
+import PageImage, { Props as PageImageProps } from '$components/page-image';
 import UrlTransformer from '$src/data/url-transformer';
-import useMangaInfo, { generatePageImageId } from './use-manga-info';
+import { MangaPageImage } from '$types/manga';
+import useMangaInfo from './use-manga-info';
+import {
+  calcScrollTop,
+  generatePageImageId,
+  getDisplayElements,
+  isBeforeCurrentPage,
+  isSamePageImage,
+} from './utils';
 import styles from './style.module.less';
 
-/**
- * https://juejin.cn/post/7132277540806213645
- * https://developer.mozilla.org/zh-CN/docs/Learn/HTML/Multimedia_and_embedding/Responsive_images
- * https://developer.mozilla.org/zh-CN/docs/Web/API/window/requestAnimationFrame
- * https://developer.mozilla.org/zh-CN/docs/Web/API/Element/scrollTop
- * https://developer.mozilla.org/zh-CN/docs/Web/API/Element/getBoundingClientRect
- */
-
-// TODO: 滚动的时候，监听挂载的 img 元素
-// 一旦有加载好的，重置当前元素被卷起的高度
-// 使得图片加载好的时候，当前图片不会发生位移
-// 可考虑 requestAnimationFrame
-
-type ScrollEventCallback = NonNullable<JSX.CustomEventHandlersCamelCase<HTMLDivElement>['onScroll']>
+const TRIGGER_UPDATE_RATIO = 0.25;
 
 const Reader: Component = () => {
-  const { info, isLoading } = useMangaInfo();
+  const {
+    isLoading,
+    readingInfo,
+    displayPageImages,
+    handleReadingInfoChange,
+  } = useMangaInfo();
 
-  createEffect(() => {
-    console.log('🚀', info());
+  /**
+   * store latest clientTop of current reading element
+   * 1. once PageImage resize, reset container.scrollTop to previous value before resize
+   * 2. TODO: 第二种情况
+   */
+  let currentReadingElementClientTop: number;
+
+  let containerRef: HTMLDivElement | undefined;
+  onMount(() => {
+    const currentReading = readingInfo();
+    if (!currentReading) return;
+
+    const displayElements = getDisplayElements(containerRef);
+    if (!displayElements) return;
+    const currentReadingElement = displayElements.find(
+      (e) => isSamePageImage(e.pageInfo, currentReading),
+    );
+
+    currentReadingElementClientTop = 0;
+    requestAnimationFrame(() => {
+      currentReadingElement?.element.scrollIntoView(true);
+    });
   });
 
-  // TODO: 维护一个 currentReading，当有另外的页的 Rect.top 小于 50vh 时，更新 buffer list，且静默更新 url
+  const handlePageStartLoad = (pageInfo: MangaPageImage): void => {
+    const currentReading = readingInfo();
+    if (!currentReading) return;
+    if (!isBeforeCurrentPage(currentReading, pageInfo)) return;
 
-  const handleScroll: ScrollEventCallback = (e) => {
-    console.log(e);
+    const displayElements = getDisplayElements(containerRef);
+    if (!displayElements) return;
+    const previousElements = displayElements.filter(
+      (e) => isBeforeCurrentPage(currentReading, e.pageInfo),
+    );
+
+    requestAnimationFrame(() => {
+      containerRef?.scrollTo({
+        top: calcScrollTop(previousElements, currentReadingElementClientTop),
+      });
+    });
+  };
+
+  // observe current reading page scroll
+  const handlePageIntersect = (
+    info: Parameters<NonNullable<PageImageProps['onIntersect']>>[0] & { pageInfo: MangaPageImage },
+  ): void => {
+    const { pageInfo, boundingClientRect, intersectionRatio } = info;
+    const currentReading = readingInfo();
+    if (!currentReading) return;
+    if (!isSamePageImage(currentReading, pageInfo)) return;
+
+    /* update current reading page image */
+    // page's display ratio still not trigger update, just update `clientTop`
+    if (intersectionRatio >= TRIGGER_UPDATE_RATIO) {
+      currentReadingElementClientTop = boundingClientRect.top;
+      return;
+    }
+
+    const direction: Parameters<typeof handleReadingInfoChange>[0] = boundingClientRect.top > 0 ? 'prev' : 'next';
+    const clientTopBeforeUpdate = currentReadingElementClientTop;
+    const currentReadingBeforeUpdate = currentReading;
+
+    handleReadingInfoChange(
+      direction,
+      () => requestAnimationFrame(() => {
+        const displayElements = getDisplayElements(containerRef);
+        if (!displayElements) return;
+        const previousElements = displayElements.filter(
+          (e) => isBeforeCurrentPage(currentReadingBeforeUpdate, e.pageInfo),
+        );
+
+        const currentReadingElementIndex = displayElements.findIndex(
+          (e) => isSamePageImage(currentReading, e.pageInfo),
+        );
+        if (currentReadingElementIndex === -1) return;
+        const nextReadingElementIndex = direction === 'prev'
+          ? Math.max(currentReadingElementIndex - 1, -1)
+          : Math.min(currentReadingElementIndex + 1, displayElements.length);
+        const nextReadingElement = displayElements[nextReadingElementIndex];
+
+        containerRef?.scrollTo({
+          top: calcScrollTop(previousElements, clientTopBeforeUpdate),
+        });
+        currentReadingElementClientTop = nextReadingElement.clientTop;
+      }),
+    );
   };
 
   return (
     <Show when={!isLoading}>
-      <div
-        class={styles.readView}
-        onScroll={handleScroll}
-      >
-        <PageImage
-          src={UrlTransformer.getPageImage({
-            mangaId: info()!.id,
-            chapterIndex: 14,
-            pageIndex: 5,
-          })}
-          id={generatePageImageId({
-            mangaId: info()!.id,
-            chapterIndex: 14,
-            pageIndex: 5,
-          })}
-          onLoaded={() => { console.log('lll'); }}
-        />
+      <div ref={containerRef} class={styles.readView}>
+        <For each={displayPageImages()}>
+          { (page) => (
+            <PageImage
+              id={generatePageImageId(page)}
+              src={UrlTransformer.getPageImage(page)}
+              containerRef={containerRef}
+              onLoadStart={() => handlePageStartLoad(page)}
+              onIntersect={(info) => handlePageIntersect({ ...info, pageInfo: page })}
+            />
+          ) }
+        </For>
       </div>
     </Show>
   );

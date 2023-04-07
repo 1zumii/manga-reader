@@ -20,10 +20,10 @@ const MangaDetailDrawer: Component<Props> = (props) => {
 
   const renderChapterList = (chapters: MangaChapter[], infoId: MangaInfo['id']): JSX.Element => (
     <For each={chapters}>
-      { ({ name }, index) => (
+      { ({ name, index: chapterIndex }) => (
         <Link
           class={styles.chapter}
-          href={getReaderNavigateLink({ mangaId: infoId, chapterIndex: index() + 1, pageIndex: 1 })}
+          href={getReaderNavigateLink({ mangaId: infoId, chapterIndex, pageIndex: 1 })}
         >
           { name }
         </Link>
@@ -34,16 +34,22 @@ const MangaDetailDrawer: Component<Props> = (props) => {
   return (
     <Portal mount={document.getElementById('root') ?? undefined}>
       <Show when={props.info}>
-        <div class={styles.bgMask} onClick={handleClose} />
-        <div class={styles.detailDrawer}>
-          <div class={styles.briefInfo}>
-            <img src={UrlTransformer.getCover(props.info!.id)} alt="cover" />
-            <h5>{ props.info!.title }</h5>
-          </div>
-          <div class={styles.chapterList}>
-            { renderChapterList(props.info!.chapters, props.info!.id) }
-          </div>
-        </div>
+        {
+          (info) => (
+            <>
+              <div class={styles.bgMask} onClick={handleClose} />
+              <div class={styles.detailDrawer}>
+                <div class={styles.briefInfo}>
+                  <img src={UrlTransformer.getCover(info().id)} alt="cover" />
+                  <h5>{ info().title }</h5>
+                </div>
+                <div class={styles.chapterList}>
+                  { renderChapterList(info().chapters, info().id) }
+                </div>
+              </div>
+            </>
+          )
+        }
       </Show>
     </Portal>
   );

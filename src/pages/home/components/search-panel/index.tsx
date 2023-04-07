@@ -11,8 +11,6 @@ const SearchPanel: Component<Props> = (props) => {
 
   const handleSearch: JSX.EventHandlerUnion<HTMLInputElement, KeyboardEvent> = (event) => {
     if (event.code !== 'Enter') return;
-    // DEBUG:
-    console.log(inputRef.value);
     props.onSearch(inputRef.value);
   };
 

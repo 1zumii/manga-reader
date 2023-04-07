@@ -1,55 +1,17 @@
 import { createMemo, createSignal } from 'solid-js';
 import { useMangaResource } from '$src/data/use-manga-resource';
-import { getReaderNavigateLink, getReaderUrlParams } from '$src/router';
 import { MangaPageImage } from '$types/manga';
+import { getAdjacentPages, getInitReadingInfo, updateReaderUrlParams } from './utils';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const PAGE_PADDING_NUM = 2;
-
-export const generatePageImageId = (image: MangaPageImage): string => JSON.stringify(
-  image,
-  Object.keys(image).sort(),
-);
-
-// DEBUG:
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const updateReaderUrlParams = (next: MangaPageImage): void => {
-  const link = getReaderNavigateLink(next);
-  window.history.pushState({}, '', link); // update url but not trigger page reload
-};
-
-// get reading information from matched url params at page loaded
-const getInitReadingInfo = (): MangaPageImage | undefined => {
-  const params = getReaderUrlParams();
-
-  if (Number.isNaN(Number.parseInt(params.chapterIndex, 10))) return undefined;
-  if (Number.isNaN(Number.parseInt(params.pageIndex, 10))) return undefined;
-
-  return {
-    mangaId: params.mangaId,
-    chapterIndex: Number.parseInt(params.chapterIndex, 10),
-    pageIndex: Number.parseInt(params.pageIndex, 10),
-  };
-};
 
 // TODO: 根据 isLoading 作为返回类型的 narrow guard
 const useMangaInfo = () => {
   const mangaList = useMangaResource();
 
-  const [readingInfo] = createSignal(getInitReadingInfo());
+  const [readingInfo, setReadingInfo] = createSignal(getInitReadingInfo());
 
-  // render more image before and after current image
-  const displayPageImages = createMemo<MangaPageImage[]>(() => {
-    if (mangaList.state !== 'ready') return [];
-
-    const currentReading = readingInfo();
-    if (!currentReading) return [];
-
-    // DEBUG:
-    return [];
-  });
-
-  const currentMangaInfo = createMemo(() => {
+  const mangaInfo = createMemo(() => {
     if (mangaList.state !== 'ready') return undefined;
 
     const currentReadingInfo = readingInfo();
@@ -58,10 +20,47 @@ const useMangaInfo = () => {
     return mangaList().find((m) => m.id === currentReadingInfo.mangaId);
   });
 
+  // render more image before and after current image
+  const displayPageImages = createMemo<MangaPageImage[]>(() => {
+    const currentReading = readingInfo();
+    if (!currentReading) return [];
+    const currentMangaInfo = mangaInfo();
+    if (!currentMangaInfo) return [];
+
+    return [
+      ...getAdjacentPages(currentReading, 'prev', PAGE_PADDING_NUM, currentMangaInfo.chapters),
+      currentReading,
+      ...getAdjacentPages(currentReading, 'next', PAGE_PADDING_NUM, currentMangaInfo.chapters),
+    ];
+  });
+
+  const handleReadingInfoChange = (
+    direction: Parameters<typeof getAdjacentPages>[1],
+    afterChange?: () => void,
+  ): void => {
+    const currentReading = readingInfo();
+    if (!currentReading) return;
+    const currentMangaInfo = mangaInfo();
+    if (!currentMangaInfo) return;
+
+    const nextReading = getAdjacentPages(
+      currentReading,
+      direction,
+      1,
+      currentMangaInfo.chapters,
+    )[0];
+    if (!nextReading) return;
+
+    setReadingInfo(nextReading);
+    updateReaderUrlParams(nextReading);
+    afterChange?.();
+  };
+
   return {
+    mangaInfo,
+    readingInfo,
     displayPageImages,
-    currentReading: readingInfo,
-    info: currentMangaInfo,
+    handleReadingInfoChange,
     resourceState: mangaList.state,
     isLoading: mangaList.loading,
   };
