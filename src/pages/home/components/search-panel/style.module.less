@@ -10,7 +10,7 @@
     align-items: center;
     width: 95%;
     max-width: 400px;
-    background-color: fade(#ffffff, 50%);
+    background-color: var(--bg-fade-color);
     #background-blur(10px);
     box-shadow: rgba(100, 100, 111, 0.2) 0px 0px 20px 0px;
 
@@ -21,6 +21,10 @@
         background-position: center center;
         background-repeat: no-repeat;
         margin-right: 5px;
+
+        @media (prefers-color-scheme: dark) {
+            background-image: url('$src/assets/search-dark.svg');
+        }
     }
 
     .input {

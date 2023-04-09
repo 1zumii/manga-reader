@@ -2,11 +2,28 @@
   box-sizing: border-box;
 }
 
+:root {
+  --font-color: #000;
+  --bg-color: #fff;
+  --bg-fade-color: fade(#fff, 50%);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --font-color: #fff;
+    --bg-color: #000;
+    --bg-fade-color: fade(#000, 50%);
+  }
+}
+
 body {
   margin: 0;
   font-family: JetBrains Mono, Menlo, Monaco, Consolas, monospace;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  color: var(--font-color);
+  background-color: var(--bg-color);
 }
 
 .flex-width() {

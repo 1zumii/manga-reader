@@ -1,7 +1,4 @@
 ## ToDo List
-- [x] github action 定时任务
-- [x] 从阿里云 oss 获取数据
-- [x] 注入敏感变量，本地 dev、本地 build、action build
 - [ ] 阅读功能
   - [ ] 页码、章节跳转
   - [x] 无限滚动
