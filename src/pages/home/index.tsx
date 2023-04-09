@@ -1,4 +1,4 @@
-import { createSignal, For } from 'solid-js';
+import { createEffect, createSignal, For } from 'solid-js';
 import type { Component, JSX } from 'solid-js';
 import MangaDetailDrawer from '$components/detail-drawer';
 import useDetailDrawer from '$components/detail-drawer/use-detail-drawer';
@@ -22,6 +22,11 @@ const useMangaListWithSearch = () => {
     const nextMangaList = (mangaListAll()).filter(({ title }) => title.includes(searchValue));
     setSearchResult(nextMangaList);
   };
+
+  createEffect(() => {
+    if (mangaResource.loading) return;
+    setSearchResult(mangaListAll());
+  });
 
   return { mangaList: searchResult, isLoading: mangaResource.loading, handleSearch };
 };
