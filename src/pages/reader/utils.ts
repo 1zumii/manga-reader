@@ -1,15 +1,10 @@
-import { getReaderNavigateLink, getReaderUrlParams } from '$src/router';
+import { getReaderUrlParams } from '$src/router';
 import { MangaChapter, MangaPageImage } from '$types/manga';
 
 export const generatePageImageId = (image: MangaPageImage): string => JSON.stringify(
   image,
   Object.keys(image).sort(),
 );
-
-export const updateReaderUrlParams = (next: MangaPageImage): void => {
-  const link = getReaderNavigateLink(next);
-  window.history.pushState({}, '', link); // update url but not trigger page reload
-};
 
 // get reading information from matched url params at page loaded
 export const getInitReadingInfo = (): MangaPageImage | undefined => {

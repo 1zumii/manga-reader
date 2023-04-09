@@ -21,7 +21,7 @@ const API = {
   getMangaChapterList: (id: string): string => `/comic/${id}.html`,
 };
 
-const HIGHER_PRIORITY_MANGA = ['咒术回战', '鬼灭之刃', '进击的巨人', '电锯人'];
+const HIGHER_PRIORITY_MANGA = ['咒术回战', '鬼灭之刃', '进击的巨人', '电锯人', '海贼王'];
 
 const converter = new OpenCC('t2s.json');
 

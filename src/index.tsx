@@ -1,5 +1,5 @@
 /* @refresh reload */
-import { Router, useRoutes } from '@solidjs/router';
+import { Router, useRoutes, hashIntegration } from '@solidjs/router';
 import type { Component } from 'solid-js';
 import { render } from 'solid-js/web';
 import MangaInfoProvider from './data/use-manga-resource';
@@ -11,7 +11,7 @@ const App: Component = () => {
 
   return (
     <>
-      <Router>
+      <Router source={hashIntegration()}>
         <MangaInfoProvider>
           <Routes />
         </MangaInfoProvider>

@@ -1,7 +1,8 @@
 import { createMemo, createSignal } from 'solid-js';
 import { useMangaResource } from '$src/data/use-manga-resource';
+import { updateReaderUrlParams } from '$src/router';
 import { MangaPageImage } from '$types/manga';
-import { getAdjacentPages, getInitReadingInfo, updateReaderUrlParams } from './utils';
+import { getAdjacentPages, getInitReadingInfo } from './utils';
 
 const PAGE_PADDING_NUM = 2;
 
