@@ -59,6 +59,7 @@ const Reader: Component = () => {
       (e) => isBeforeCurrentPage(currentReading, e.pageInfo),
     );
 
+    // reset current page's clientTop, prevent window scroll once page image resize(because of load)
     requestAnimationFrame(() => {
       containerRef?.scrollTo({
         top: calcScrollTop(previousElements, currentReadingElementClientTop),
@@ -79,11 +80,10 @@ const Reader: Component = () => {
     // update display pages but no scroll, prevent auto trigger next round update and dead cycle
     if (currentReadingElementClientTop === boundingClientRect.top) return;
 
-    // page's display ratio still not trigger update, just update `clientTop`
-    if (intersectionRatio >= TRIGGER_UPDATE_RATIO) {
-      currentReadingElementClientTop = boundingClientRect.top;
-      return;
-    }
+    currentReadingElementClientTop = boundingClientRect.top;
+
+    // page's display ratio still not trigger update
+    if (intersectionRatio >= TRIGGER_UPDATE_RATIO) return;
 
     const direction: Parameters<typeof handleReadingInfoChange>[0] = boundingClientRect.top > 0 ? 'prev' : 'next';
     const clientTopBeforeUpdate = currentReadingElementClientTop;

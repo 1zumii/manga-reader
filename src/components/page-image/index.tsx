@@ -72,7 +72,7 @@ const PageImage: Component<Props> = (props) => {
         props.onIntersect?.({ boundingClientRect, intersectionRatio });
       });
     },
-    { threshold: generateObserveThresholds(0.01) },
+    { threshold: generateObserveThresholds(0.001) }, // 0.1 %
   );
   onMount(() => {
     if (!wrapperRef) return;
@@ -95,9 +95,12 @@ const PageImage: Component<Props> = (props) => {
         style={{
           position: 'absolute',
           'z-index': 10,
-          padding: '8px 0',
+          padding: '8px',
           'font-size': '16px',
-          'backdrop-filter': 'blur(15px)',
+          'border-radius': '5px',
+          'backdrop-filter': 'blur(25px)',
+          width: '100%',
+          'overflow-x': 'scroll',
         }}
       >
         { props.id }

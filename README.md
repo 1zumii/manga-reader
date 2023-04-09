@@ -7,7 +7,9 @@
   - [x] 无限滚动
   - [x] url记录篇章、页数，滚动时自动记录
 - [ ] bugfix: empty page when first load
+- [x] bugfix: 快速滚动时，current reading 信息出错
 - [ ] bugfix: crawler error handling
+- [ ] adapt notch screen
 - [ ] unload 时展示骨架屏
 - [ ] 抽象虚拟滚动逻辑
   - [ ] 横向滚动
