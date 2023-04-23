@@ -16,7 +16,7 @@ export type Props = {
     onError?: () => void;
     /** IntersectionObserver's callback */
     onIntersect?: (
-      intersectInfo: Pick<IntersectionObserverEntry, 'boundingClientRect' | 'intersectionRatio'>
+      intersectInfo: Pick<IntersectionObserverEntry, 'boundingClientRect' | 'intersectionRatio' | 'isIntersecting'>
     ) => void;
     /** intersection's relative root element ➡️ `IntersectionObserver.option.root` */
     containerRef?: IntersectionObserverInit['root'];
@@ -67,12 +67,11 @@ const PageImage: Component<Props> = (props) => {
   const intersectionObserver = new IntersectionObserver(
     (observeEntries) => {
       observeEntries.forEach((entry) => {
-        if (!entry.isIntersecting) return;
-        const { boundingClientRect, intersectionRatio } = entry;
-        props.onIntersect?.({ boundingClientRect, intersectionRatio });
+        const { boundingClientRect, intersectionRatio, isIntersecting } = entry;
+        props.onIntersect?.({ boundingClientRect, intersectionRatio, isIntersecting });
       });
     },
-    { threshold: generateObserveThresholds(0.001) }, // 0.1 %
+    { threshold: generateObserveThresholds(0.0001) },
   );
   onMount(() => {
     if (!wrapperRef) return;
@@ -99,6 +98,7 @@ const PageImage: Component<Props> = (props) => {
           'font-size': '16px',
           'border-radius': '5px',
           'backdrop-filter': 'blur(25px)',
+          '-webkit-backdrop-filter': 'blur(25px)',
           width: '100%',
           'overflow-x': 'scroll',
         }}

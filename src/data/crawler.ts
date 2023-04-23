@@ -9,7 +9,7 @@ import { OpenCC } from 'opencc';
 // do not use path alias provided by vite like `$src`
 // because this script will be compiled by `tsc` and run by node
 // `tsc` doesn't convert path alias. for more read: https://typestrong.org/ts-node/docs/paths#why-is-this-not-built-in-to-ts-node
-import { DATA_FILE } from '../constants';
+import { DATA_FILE, HIGHER_PRIORITY_MANGA } from '../constants';
 import { MangaChapter, MangaInfo } from '../types/manga';
 import formatNumber from '../utils/format-number';
 
@@ -20,8 +20,6 @@ const API = {
   getMangaList: (pageIndex: number): string => `/comic99.${formatNumber(pageIndex, 2)}.html`,
   getMangaChapterList: (id: string): string => `/comic/${id}.html`,
 };
-
-const HIGHER_PRIORITY_MANGA = ['咒术回战', '鬼灭之刃', '进击的巨人', '电锯人', '海贼王'];
 
 const converter = new OpenCC('t2s.json');
 

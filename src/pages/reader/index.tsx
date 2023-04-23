@@ -14,11 +14,12 @@ import {
 } from './utils';
 import styles from './style.module.less';
 
+// TODO: page 高度过小导致 intersectionRatio 一直为 1
 const TRIGGER_UPDATE_RATIO = 0.25;
 
 const Reader: Component = () => {
   const {
-    isLoading,
+    mangaResource,
     readingInfo,
     displayPageImages,
     handleReadingInfoChange,
@@ -27,7 +28,7 @@ const Reader: Component = () => {
   /**
    * store latest clientTop of current reading element
    * 1. once PageImage resize, reset container.scrollTop to previous value before resize
-   * 2. TODO: 第二种情况
+   * 2. at current reading page changing, set this variable to next reading page's element.clientTop
    */
   let currentReadingElementClientTop: number;
 
@@ -59,6 +60,14 @@ const Reader: Component = () => {
       (e) => isBeforeCurrentPage(currentReading, e.pageInfo),
     );
 
+    // DEBUG:
+    /* console.log(
+      Date.now(),
+      '🏵',
+      [currentReading.chapterIndex, currentReading.pageIndex],
+      { currentReadingElementClientTop },
+    ); */
+
     // reset current page's clientTop, prevent window scroll once page image resize(because of load)
     requestAnimationFrame(() => {
       containerRef?.scrollTo({
@@ -81,6 +90,18 @@ const Reader: Component = () => {
     if (currentReadingElementClientTop === boundingClientRect.top) return;
 
     currentReadingElementClientTop = boundingClientRect.top;
+
+    // DEBUG:
+    /* console.log(
+      Date.now(),
+      '❎',
+      [currentReading.chapterIndex, currentReading.pageIndex],
+      {
+        currentReadingElementClientTop,
+        intersectionRatio,
+        height: boundingClientRect.height,
+      },
+    ); */
 
     // page's display ratio still not trigger update
     if (intersectionRatio >= TRIGGER_UPDATE_RATIO) return;
@@ -107,6 +128,22 @@ const Reader: Component = () => {
           : Math.min(currentReadingElementIndex + 1, displayElements.length);
         const nextReadingElement = displayElements[nextReadingElementIndex];
 
+        // DEBUG:
+        /* console.log(
+          Date.now(),
+          '🍟',
+          [
+            currentReadingBeforeUpdate.chapterIndex,
+            currentReadingBeforeUpdate.pageIndex,
+          ],
+          {
+            clientTopBeforeUpdate,
+            nextReadingElement: JSON.parse(JSON.stringify(nextReadingElement)),
+            previousElements: JSON.parse(JSON.stringify(previousElements)),
+            displayElements: JSON.parse(JSON.stringify(displayElements)),
+          },
+        ); */
+
         containerRef?.scrollTo({
           top: calcScrollTop(previousElements, clientTopBeforeUpdate),
         });
@@ -116,7 +153,7 @@ const Reader: Component = () => {
   };
 
   return (
-    <Show when={!isLoading}>
+    <Show when={!mangaResource.loading}>
       <div ref={containerRef} class={styles.readView}>
         <For each={displayPageImages()}>
           { (page) => (

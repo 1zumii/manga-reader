@@ -6,19 +6,17 @@ import { getAdjacentPages, getInitReadingInfo } from './utils';
 
 const PAGE_PADDING_NUM = 2;
 
-// TODO: 根据 isLoading 作为返回类型的 narrow guard
 const useMangaInfo = () => {
-  const mangaList = useMangaResource();
+  const mangaResource = useMangaResource();
 
   const [readingInfo, setReadingInfo] = createSignal(getInitReadingInfo());
 
   const mangaInfo = createMemo(() => {
-    if (mangaList.state !== 'ready') return undefined;
-
+    if (mangaResource.state !== 'ready') return undefined;
     const currentReadingInfo = readingInfo();
     if (!currentReadingInfo) return undefined;
 
-    return mangaList().find((m) => m.id === currentReadingInfo.mangaId);
+    return mangaResource().find((m) => m.id === currentReadingInfo.mangaId);
   });
 
   // render more image before and after current image
@@ -59,11 +57,10 @@ const useMangaInfo = () => {
 
   return {
     mangaInfo,
+    mangaResource,
     readingInfo,
     displayPageImages,
     handleReadingInfoChange,
-    resourceState: mangaList.state,
-    isLoading: mangaList.loading,
   };
 };
 
