@@ -27,10 +27,15 @@ const PageImage: Component<Props> = (props) => {
   const [status, setStatus] = createSignal<'unload' | 'loading' | 'loaded' | 'error'>('unload');
 
   // cancel <img> request
-  onCleanup(() => {
+  const cancelImgRequest = () => {
     if (!imageRef) return;
     imageRef.src = '';
-  });
+  };
+  onCleanup(cancelImgRequest); // cancel at component unmounted
+  /* createEffect(on( // cancel at id changes
+    () => props.id,
+    cancelImgRequest,
+  )); */
 
   const handleLoaded = () => {
     setStatus('loaded');

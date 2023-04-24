@@ -30,7 +30,8 @@ export const getReaderUrlParams = (): Record<keyof MangaPageImage, string> => {
 
 // update url but not trigger page reload
 export const updateReaderUrlParams = (next: MangaPageImage): void => {
-  window.location.hash = `#${getReaderNavigateLink(next)}`;
+  const nextRoute = `${window.location.pathname}#${getReaderNavigateLink(next)}`;
+  window.history.replaceState({}, '', nextRoute);
 };
 
 export default routes;
