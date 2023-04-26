@@ -74,22 +74,25 @@ const Reader: Component = () => {
     });
   }; */
 
-  let currentReading = readingInfo(); // initial
   // observe current reading page scroll
   const handlePageIntersect = (
     info: Parameters<NonNullable<PageImageProps['onIntersect']>>[0] & { pageInfo: MangaPageImage },
   ): void => {
     const { pageInfo, boundingClientRect, intersectionRatio } = info;
+    const currentReading = readingInfo();
     if (!currentReading) return;
     if (!isSamePageImage(currentReading, pageInfo)) return;
 
     /* update current reading page image */
     // update display pages but no scroll, prevent auto trigger next round update and dead cycle
     if (currentReadingElementClientTop === boundingClientRect.top) return;
+    // TODO: 符号相反，且 intersectionRatio 较小
+    if (
+      (currentReadingElementClientTop * boundingClientRect.top < 0)
+      && (intersectionRatio < TRIGGER_UPDATE_RATIO)
+    ) return;
 
     // DEBUG:
-    const ddee = getDisplayElements(containerRef);
-    if (!ddee) return;
     console.log(
       Date.now(),
       '❎',
@@ -98,7 +101,6 @@ const Reader: Component = () => {
         currentReadingElementClientTopBeforeUpdate: currentReadingElementClientTop,
         currentReadingElementClientTop: boundingClientRect.top,
         intersectionRatio,
-        displayElements: ddee,
         height: boundingClientRect.height,
       })),
     );
@@ -131,15 +133,10 @@ const Reader: Component = () => {
           (e) => isBeforeCurrentPage(previousReading, e.pageInfo),
         );
 
-        const currentReadingElementIndex = displayElements.findIndex(
-          (e) => isSamePageImage(currentReading!, e.pageInfo), // TODO: non-null assertion
+        const nextReadingElement = displayElements.find(
+          (e) => isSamePageImage(nextReading, e.pageInfo),
         );
-        if (currentReadingElementIndex === -1) return;
-
-        const nextReadingElementIndex = direction === 'prev'
-          ? Math.max(currentReadingElementIndex - 1, -1)
-          : Math.min(currentReadingElementIndex + 1, displayElements.length);
-        const nextReadingElement = displayElements[nextReadingElementIndex];
+        if (!nextReadingElement) return;
 
         // DEBUG:
         console.log(
@@ -186,7 +183,6 @@ const Reader: Component = () => {
           (sum, e) => sum + e.height,
           -nextContainerScrollTop,
         );
-        currentReading = nextReading;
       }),
     );
   };
