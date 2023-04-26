@@ -43,6 +43,7 @@ const Reader: Component = () => {
     );
 
     currentReadingElementClientTop = 0;
+    // FIXME: macos safari doesn't work
     currentReadingElement?.element.scrollIntoView(true);
   });
 
@@ -73,12 +74,12 @@ const Reader: Component = () => {
     });
   }; */
 
+  let currentReading = readingInfo(); // initial
   // observe current reading page scroll
   const handlePageIntersect = (
     info: Parameters<NonNullable<PageImageProps['onIntersect']>>[0] & { pageInfo: MangaPageImage },
   ): void => {
     const { pageInfo, boundingClientRect, intersectionRatio } = info;
-    const currentReading = readingInfo();
     if (!currentReading) return;
     if (!isSamePageImage(currentReading, pageInfo)) return;
 
@@ -104,11 +105,11 @@ const Reader: Component = () => {
 
     currentReadingElementClientTop = boundingClientRect.top;
 
+    /** determine trigger update or not */
     // page's display ratio still not trigger update
     if (intersectionRatio >= TRIGGER_UPDATE_RATIO) return;
 
     if (!containerRef) return;
-
     const direction: Parameters<typeof handleReadingInfoChange>[0] = boundingClientRect.top > 0 ? 'prev' : 'next';
     const previousReading = currentReading;
     const previousContainerScrollTop = containerRef.scrollTop;
@@ -118,7 +119,7 @@ const Reader: Component = () => {
       direction,
       // use `requestAnimationFrame` instead of `queueMicroTask`,
       // for deferring data update closer to rendering.
-      () => requestAnimationFrame(() => {
+      (nextReading) => requestAnimationFrame(() => {
         if (!containerRef) return;
         const currentContainerScrollTop = containerRef.scrollTop;
         // scrollTop has changed after update pages and before rerender(rAF call)
@@ -131,7 +132,7 @@ const Reader: Component = () => {
         );
 
         const currentReadingElementIndex = displayElements.findIndex(
-          (e) => isSamePageImage(currentReading, e.pageInfo),
+          (e) => isSamePageImage(currentReading!, e.pageInfo), // TODO: non-null assertion
         );
         if (currentReadingElementIndex === -1) return;
 
@@ -185,6 +186,7 @@ const Reader: Component = () => {
           (sum, e) => sum + e.height,
           -nextContainerScrollTop,
         );
+        currentReading = nextReading;
       }),
     );
   };

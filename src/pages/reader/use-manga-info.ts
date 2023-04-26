@@ -41,7 +41,7 @@ const useMangaInfo = () => {
 
   const handleReadingInfoChange = (
     direction: Parameters<typeof getAdjacentPages>[1],
-    afterChange?: () => void,
+    afterChange?: (nextReading: MangaPageImage) => void,
   ): void => {
     const currentReading = readingInfo();
     if (!currentReading) return;
@@ -58,7 +58,7 @@ const useMangaInfo = () => {
 
     setReadingInfo(nextReading);
     updateReaderUrlParams(nextReading);
-    afterChange?.();
+    afterChange?.(nextReading);
   };
 
   return {
