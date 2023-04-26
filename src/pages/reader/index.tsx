@@ -57,6 +57,14 @@ const Reader: Component = () => {
       (e) => isBeforeCurrentPage(currentReading, e.pageInfo),
     );
 
+    // DEBUG:
+    console.log(
+      Date.now(),
+      '🏵',
+      [currentReading.chapterIndex, currentReading.pageIndex],
+      { currentReadingElementClientTop },
+    );
+
     // reset current page's clientTop, prevent window scroll once page image resize(because of load)
     requestAnimationFrame(() => {
       containerRef?.scrollTo({
@@ -77,6 +85,22 @@ const Reader: Component = () => {
     /* update current reading page image */
     // update display pages but no scroll, prevent auto trigger next round update and dead cycle
     if (currentReadingElementClientTop === boundingClientRect.top) return;
+
+    // DEBUG:
+    const ddee = getDisplayElements(containerRef);
+    if (!ddee) return;
+    console.log(
+      Date.now(),
+      '❎',
+      JSON.parse(JSON.stringify([currentReading.chapterIndex, currentReading.pageIndex])),
+      JSON.parse(JSON.stringify({
+        currentReadingElementClientTopBeforeUpdate: currentReadingElementClientTop,
+        currentReadingElementClientTop: boundingClientRect.top,
+        intersectionRatio,
+        displayElements: ddee,
+        height: boundingClientRect.height,
+      })),
+    );
 
     currentReadingElementClientTop = boundingClientRect.top;
 
@@ -116,6 +140,24 @@ const Reader: Component = () => {
           : Math.min(currentReadingElementIndex + 1, displayElements.length);
         const nextReadingElement = displayElements[nextReadingElementIndex];
 
+        // DEBUG:
+        console.log(
+          Date.now(),
+          '🍟',
+          JSON.parse(JSON.stringify([
+            previousReading.chapterIndex,
+            previousReading.pageIndex,
+          ])),
+          JSON.parse(JSON.stringify({
+            currentReadingElementClientTop,
+            previousReadingElementClientTop,
+            scrolledPreviousReadingElementClientTop: previousReadingElementClientTop - scrollOffset,
+            nextReadingElement: JSON.parse(JSON.stringify(nextReadingElement)),
+            elementsScrolledUp: JSON.parse(JSON.stringify(elementsScrolledUp)),
+            displayElements: JSON.parse(JSON.stringify(displayElements)),
+          })),
+        );
+
         const nextContainerScrollTop = calcScrollTop(
           elementsScrolledUp,
           previousReadingElementClientTop - scrollOffset,
@@ -125,7 +167,19 @@ const Reader: Component = () => {
         const elementsBeforeNextReading = displayElements.filter(
           (e) => isBeforeCurrentPage(nextReadingElement.pageInfo, e.pageInfo),
         );
-
+        // DEBUG:
+        console.log(
+          Date.now(),
+          '🌧',
+          JSON.parse(JSON.stringify({
+            nextContainerScrollTop,
+            elementsBeforeNextReading,
+            nextClientTop: elementsBeforeNextReading.reduce(
+              (sum, e) => sum + e.height,
+              -nextContainerScrollTop,
+            ),
+          })),
+        );
         // previous elements' height sum - next container's scrollTop
         currentReadingElementClientTop = elementsBeforeNextReading.reduce(
           (sum, e) => sum + e.height,
