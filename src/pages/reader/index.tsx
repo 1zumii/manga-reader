@@ -14,7 +14,6 @@ import {
 } from './utils';
 import styles from './style.module.less';
 
-// TODO: page 高度过小导致 intersectionRatio 一直为 1
 const TRIGGER_UPDATE_RATIO = 0.25;
 
 const Reader: Component = () => {
@@ -44,12 +43,10 @@ const Reader: Component = () => {
     );
 
     currentReadingElementClientTop = 0;
-    requestAnimationFrame(() => {
-      currentReadingElement?.element.scrollIntoView(true);
-    });
+    currentReadingElement?.element.scrollIntoView(true);
   });
 
-  const handlePageStartLoad = (pageInfo: MangaPageImage): void => {
+  /*  const handlePageStartLoad = (pageInfo: MangaPageImage): void => {
     const currentReading = readingInfo();
     if (!currentReading) return;
     if (!isBeforeCurrentPage(currentReading, pageInfo)) return;
@@ -60,21 +57,13 @@ const Reader: Component = () => {
       (e) => isBeforeCurrentPage(currentReading, e.pageInfo),
     );
 
-    // DEBUG:
-    /* console.log(
-      Date.now(),
-      '🏵',
-      [currentReading.chapterIndex, currentReading.pageIndex],
-      { currentReadingElementClientTop },
-    ); */
-
     // reset current page's clientTop, prevent window scroll once page image resize(because of load)
     requestAnimationFrame(() => {
       containerRef?.scrollTo({
         top: calcScrollTop(previousElements, currentReadingElementClientTop),
       });
     });
-  };
+  }; */
 
   // observe current reading page scroll
   const handlePageIntersect = (
@@ -91,63 +80,57 @@ const Reader: Component = () => {
 
     currentReadingElementClientTop = boundingClientRect.top;
 
-    // DEBUG:
-    /* console.log(
-      Date.now(),
-      '❎',
-      [currentReading.chapterIndex, currentReading.pageIndex],
-      {
-        currentReadingElementClientTop,
-        intersectionRatio,
-        height: boundingClientRect.height,
-      },
-    ); */
-
     // page's display ratio still not trigger update
     if (intersectionRatio >= TRIGGER_UPDATE_RATIO) return;
 
+    if (!containerRef) return;
+
     const direction: Parameters<typeof handleReadingInfoChange>[0] = boundingClientRect.top > 0 ? 'prev' : 'next';
-    const clientTopBeforeUpdate = currentReadingElementClientTop;
-    const currentReadingBeforeUpdate = currentReading;
+    const previousReading = currentReading;
+    const previousContainerScrollTop = containerRef.scrollTop;
+    const previousReadingElementClientTop = currentReadingElementClientTop;
 
     handleReadingInfoChange(
       direction,
+      // use `requestAnimationFrame` instead of `queueMicroTask`,
+      // for deferring data update closer to rendering.
       () => requestAnimationFrame(() => {
+        if (!containerRef) return;
+        const currentContainerScrollTop = containerRef.scrollTop;
+        // scrollTop has changed after update pages and before rerender(rAF call)
+        const scrollOffset = currentContainerScrollTop - previousContainerScrollTop;
+
         const displayElements = getDisplayElements(containerRef);
         if (!displayElements) return;
-        const previousElements = displayElements.filter(
-          (e) => isBeforeCurrentPage(currentReadingBeforeUpdate, e.pageInfo),
+        const elementsScrolledUp = displayElements.filter(
+          (e) => isBeforeCurrentPage(previousReading, e.pageInfo),
         );
 
         const currentReadingElementIndex = displayElements.findIndex(
           (e) => isSamePageImage(currentReading, e.pageInfo),
         );
         if (currentReadingElementIndex === -1) return;
+
         const nextReadingElementIndex = direction === 'prev'
           ? Math.max(currentReadingElementIndex - 1, -1)
           : Math.min(currentReadingElementIndex + 1, displayElements.length);
         const nextReadingElement = displayElements[nextReadingElementIndex];
 
-        // DEBUG:
-        /* console.log(
-          Date.now(),
-          '🍟',
-          [
-            currentReadingBeforeUpdate.chapterIndex,
-            currentReadingBeforeUpdate.pageIndex,
-          ],
-          {
-            clientTopBeforeUpdate,
-            nextReadingElement: JSON.parse(JSON.stringify(nextReadingElement)),
-            previousElements: JSON.parse(JSON.stringify(previousElements)),
-            displayElements: JSON.parse(JSON.stringify(displayElements)),
-          },
-        ); */
+        const nextContainerScrollTop = calcScrollTop(
+          elementsScrolledUp,
+          previousReadingElementClientTop - scrollOffset,
+        );
+        containerRef?.scrollTo({ top: nextContainerScrollTop });
 
-        containerRef?.scrollTo({
-          top: calcScrollTop(previousElements, clientTopBeforeUpdate),
-        });
-        currentReadingElementClientTop = nextReadingElement.clientTop;
+        const elementsBeforeNextReading = displayElements.filter(
+          (e) => isBeforeCurrentPage(nextReadingElement.pageInfo, e.pageInfo),
+        );
+
+        // previous elements' height sum - next container's scrollTop
+        currentReadingElementClientTop = elementsBeforeNextReading.reduce(
+          (sum, e) => sum + e.height,
+          -nextContainerScrollTop,
+        );
       }),
     );
   };
@@ -161,7 +144,7 @@ const Reader: Component = () => {
               id={generatePageImageId(page)}
               src={UrlTransformer.getPageImage(page)}
               containerRef={containerRef}
-              onLoadStart={() => handlePageStartLoad(page)}
+              // onLoadStart={() => handlePageStartLoad(page)}
               onIntersect={(info) => handlePageIntersect({ ...info, pageInfo: page })}
             />
           ) }

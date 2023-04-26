@@ -106,12 +106,18 @@ export const getDisplayElements = (containerElement?: Element) => {
   return displayElements.filter((e): e is (NonNullable<typeof e>) => !!e);
 };
 
-// if element's upper side is higher than browser window, clientTop < 0
-// result scrollTop is, e1.height + e2.height ... - clientTop
+/**
+ * - if element's upper side is higher than browser window, clientTop < 0
+ * - scrollTop is positive
+ * - result scrollTop is
+ *    ```
+ *    e1.height + e2.height ... - clientTop
+ *    ```
+ */
 export const calcScrollTop = (
-  previousElements: NonNullable<ReturnType<typeof getDisplayElements>>,
+  elementsScrolledUp: NonNullable<ReturnType<typeof getDisplayElements>>,
   relativeReadingElementClientTop: number,
-): number => previousElements.reduce(
+): number => elementsScrolledUp.reduce(
   (sum, e) => sum + e.height,
   -relativeReadingElementClientTop,
 );

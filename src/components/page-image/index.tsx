@@ -1,8 +1,34 @@
 import {
-  Component, createSignal, onCleanup, onMount,
+  Component, JSX, createSignal, onCleanup, onMount,
 } from 'solid-js';
 import generateObserveThresholds from '$utils/observe-threshold';
 import styles from './style.module.less';
+
+const renderDevFootprint = (id: string): JSX.Element => {
+  const isDev = import.meta.env.DEV;
+  // eslint-disable-next-line solid/components-return-once
+  if (!isDev) return <></>;
+
+  const footprintStyle: JSX.CSSProperties = {
+    position: 'absolute',
+    padding: '10px',
+    margin: '10px',
+    'font-size': '1.2rem',
+    'z-index': 10,
+    'border-radius': '5px',
+    'backdrop-filter': 'blur(25px)',
+    '-webkit-backdrop-filter': 'blur(25px)',
+    'overflow-x': 'scroll',
+  };
+  const info = JSON.parse(id);
+  return (
+    <pre style={footprintStyle}>
+      <span style={{ color: 'blue' }}>{ info.chapterIndex }</span>
+      &nbsp;&nbsp;
+      <span style={{ color: 'deeppink' }}>{ info.pageIndex }</span>
+    </pre>
+  );
+};
 
 export type Props = {
     src: string;
@@ -94,22 +120,7 @@ const PageImage: Component<Props> = (props) => {
       ref={wrapperRef}
       data-id={props.id}
     >
-      { /* DEBUG: */ }
-      { /* <pre
-        style={{
-          position: 'absolute',
-          'z-index': 10,
-          padding: '8px',
-          'font-size': '16px',
-          'border-radius': '5px',
-          'backdrop-filter': 'blur(25px)',
-          '-webkit-backdrop-filter': 'blur(25px)',
-          width: '100%',
-          'overflow-x': 'scroll',
-        }}
-      >
-        { props.id }
-      </pre> */ }
+      { renderDevFootprint(props.id) }
       <img
         // loading='lazy' // TODO: 需要实验
         ref={imageRef}
