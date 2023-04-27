@@ -1,4 +1,3 @@
-import { A as Link } from '@solidjs/router';
 import {
   Component, JSX, Show, For,
 } from 'solid-js';
@@ -18,15 +17,17 @@ const MangaDetailDrawer: Component<Props> = (props) => {
     props.onClose();
   };
 
-  const renderChapterList = (chapters: MangaChapter[], infoId: MangaInfo['id']): JSX.Element => (
+  const renderChapterList = (chapters: MangaChapter[], mangaId: MangaInfo['id']): JSX.Element => (
     <For each={chapters}>
       { ({ name, index: chapterIndex }) => (
-        <Link
+        <a
           class={styles.chapter}
-          href={getReaderNavigateLink({ mangaId: infoId, chapterIndex, pageIndex: 1 })}
+          target='_blank'
+          rel="noreferrer"
+          href={`${window.location.pathname}#${getReaderNavigateLink({ mangaId, chapterIndex, pageIndex: 1 })}`}
         >
           { name }
-        </Link>
+        </a>
       ) }
     </For>
   );

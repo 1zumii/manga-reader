@@ -1,4 +1,4 @@
-import { createMemo, createSignal } from 'solid-js';
+import { createEffect, createMemo, createSignal } from 'solid-js';
 import { useMangaResource } from '$src/data/use-manga-resource';
 import { updateReaderUrlParams } from '$src/router';
 import { MangaPageImage } from '$types/manga';
@@ -17,6 +17,12 @@ const useMangaInfo = () => {
     if (!currentReadingInfo) return undefined;
 
     return mangaResource().find((m) => m.id === currentReadingInfo.mangaId);
+  });
+
+  createEffect(() => {
+    const currentManga = mangaInfo();
+    if (!currentManga) return;
+    document.title = currentManga.title;
   });
 
   // render more image before and after current image
