@@ -11,6 +11,12 @@ const useMangaInfo = () => {
 
   const [readingInfo, setReadingInfo] = createSignal(getInitReadingInfo());
 
+  createEffect(() => {
+    const currentReadingInfo = readingInfo();
+    if (!currentReadingInfo) return;
+    updateReaderUrlParams(currentReadingInfo);
+  });
+
   const mangaInfo = createMemo(() => {
     if (mangaResource.state !== 'ready') return undefined;
     const currentReadingInfo = readingInfo();
@@ -57,7 +63,6 @@ const useMangaInfo = () => {
     if (!nextReading) return;
 
     setReadingInfo(nextReading);
-    updateReaderUrlParams(nextReading);
     afterChange?.(nextReading);
   };
 

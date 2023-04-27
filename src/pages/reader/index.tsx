@@ -179,10 +179,17 @@ const Reader: Component = () => {
           })),
         );
         // previous elements' height sum - next container's scrollTop
-        currentReadingElementClientTop = elementsBeforeNextReading.reduce(
+        const nextReadingElementClientTop = elementsBeforeNextReading.reduce(
           (sum, e) => sum + e.height,
           -nextContainerScrollTop,
         );
+        currentReadingElementClientTop = nextReadingElementClientTop;
+
+        // only for ios safari
+        requestAnimationFrame(() => {
+          containerRef?.scrollTo({ top: nextContainerScrollTop });
+          currentReadingElementClientTop = nextReadingElementClientTop;
+        });
       }),
     );
   };
