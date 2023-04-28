@@ -186,10 +186,10 @@ const Reader: Component = () => {
         currentReadingElementClientTop = nextReadingElementClientTop;
 
         // only for ios safari
-        requestAnimationFrame(() => {
+        /* requestAnimationFrame(() => {
           containerRef?.scrollTo({ top: nextContainerScrollTop });
           currentReadingElementClientTop = nextReadingElementClientTop;
-        });
+        }); */
       }),
     );
   };

@@ -28,7 +28,16 @@ const useMangaInfo = () => {
   createEffect(() => {
     const currentManga = mangaInfo();
     if (!currentManga) return;
-    document.title = currentManga.title;
+    const currentReadingInfo = readingInfo();
+    if (!currentReadingInfo) return;
+
+    const currentChapter = currentManga.chapters.find(
+      (c) => c.index === currentReadingInfo.chapterIndex,
+    );
+
+    document.title = currentChapter
+      ? `${currentManga.title} ➜ ${currentChapter.name}`
+      : currentManga.title;
   });
 
   // render more image before and after current image
