@@ -14,7 +14,7 @@ import {
 } from './utils';
 import styles from './style.module.less';
 
-const TRIGGER_UPDATE_RATIO = 0.25;
+const TRIGGER_UPDATE_RATIO = 0.05;
 
 const Reader: Component = () => {
   const {
