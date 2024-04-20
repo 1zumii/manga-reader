@@ -1,0 +1,1 @@
+const e=(t,o)=>{if(t.toString().length>o)return t.toString();const r=o-t.toString().length;return`${"0".repeat(r)}${t}`},n="https://www.cartoonmad.com",c="https://cc.fun8.us",g=t=>`${n}/cartoonimg/coimg/${t}.jpg`,s=({mangaId:t,chapterIndex:o,pageIndex:r})=>`${c}//2e5fc/${t}/${e(o,3)}/${e(r,3)}.jpg`,a={getCover:g,getPageImage:s};export{a as U};
