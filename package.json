@@ -45,5 +45,8 @@
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm run lint"
+  },
+  "engines": {
+    "node": "18"
   }
 }
