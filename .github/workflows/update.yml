@@ -1,23 +1,38 @@
 name: crawler->update
+
 on:
   workflow_dispatch:
   schedule:
     - cron: "30 2,9,10 * * *" # UTC
+
 jobs:
   update:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
         uses: actions/checkout@v4
+
       - name: setup node
         uses: actions/setup-node@v4
         with:
           node-version: 18
+
+      - name: setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: prepare
+        run: |
+          pnpm install
+          pnpm run build:common
+
       - name: crawler
         run: |
-          npm install
-          npm run build:script
-          node dist/scripts/data/crawler.js
+          pnpm run build:crawler
+          pnpm run start:crawler
+          cp ./packages/crawler/manga-info.json ./
+
       - name: setup ali-oss
         uses: manyuanrong/setup-ossutil@master
         with:

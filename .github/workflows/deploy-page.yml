@@ -1,0 +1,47 @@
+name: build->deploy
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+env:
+  VITE_ALI_OSS_BUCKET_URL: ${{secrets.ALI_OSS_BUCKET_URL}}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: prepare
+        run: |
+          pnpm install
+          pnpm run build:common
+
+      - name: setup env
+        uses: iamsauravsharma/create-dotenv@v1.2.2
+
+      - name: build
+        run: |
+          pnpm run build
+
+      - name: deploy
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: packages/web/dist
