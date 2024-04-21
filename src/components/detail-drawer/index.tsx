@@ -1,28 +1,33 @@
+import type {
+  Component,
+  JSX,
+} from "solid-js";
 import {
-  Component, JSX, Show, For,
-} from 'solid-js';
-import { Portal } from 'solid-js/web';
-import UrlTransformer from '$src/data/url-transformer';
-import { getReaderNavigateLink } from '$src/router';
-import { MangaChapter, MangaInfo } from '$types/manga';
-import styles from './style.module.less';
+  For,
+  Show,
+} from "solid-js";
+import { Portal } from "solid-js/web";
+import styles from "./style.module.less";
+import UrlTransformer from "$src/data/url-transformer";
+import { getReaderNavigateLink } from "$src/router";
+import type { MangaChapter, MangaInfo } from "$types/manga";
 
 type Props = {
   info?: MangaInfo;
   onClose: () => void;
-}
+};
 
 const MangaDetailDrawer: Component<Props> = (props) => {
   const handleClose = () => {
     props.onClose();
   };
 
-  const renderChapterList = (chapters: MangaChapter[], mangaId: MangaInfo['id']): JSX.Element => (
+  const renderChapterList = (chapters: MangaChapter[], mangaId: MangaInfo["id"]): JSX.Element => (
     <For each={chapters}>
       { ({ name, index: chapterIndex }) => (
         <a
           class={styles.chapter}
-          target='_blank'
+          target="_blank"
           rel="noreferrer"
           href={`${window.location.pathname}#${getReaderNavigateLink({ mangaId, chapterIndex, pageIndex: 1 })}`}
         >
@@ -33,7 +38,7 @@ const MangaDetailDrawer: Component<Props> = (props) => {
   );
 
   return (
-    <Portal mount={document.getElementById('root') ?? undefined}>
+    <Portal mount={document.getElementById("root") ?? undefined}>
       <Show when={props.info}>
         {
           (info) => (

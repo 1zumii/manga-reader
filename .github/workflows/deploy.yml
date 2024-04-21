@@ -1,35 +1,30 @@
 name: build->deploy
-on: 
+on:
   workflow_dispatch:
   push:
     branches:
       - main
 permissions:
   contents: write
-env: 
+env:
   VITE_ALI_OSS_BUCKET_URL: ${{secrets.ALI_OSS_BUCKET_URL}}
-jobs: 
+jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - 
-        name: checkout
+      - name: checkout
         uses: actions/checkout@v4
-      - 
-        name: setup node
+      - name: setup node
         uses: actions/setup-node@v4
         with:
           node-version: 18
-      -
-        name: setup env
+      - name: setup env
         uses: iamsauravsharma/create-dotenv@v1.2.2
-      - 
-        name: build
+      - name: build
         run: |
           npm install
           npm run build
-      - 
-        name: deploy
+      - name: deploy
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           folder: dist

@@ -1,61 +1,71 @@
+import type {
+  Component,
+  JSX,
+} from "solid-js";
 import {
-  Component, JSX, createSignal, onCleanup, onMount,
-} from 'solid-js';
-import generateObserveThresholds from '$utils/observe-threshold';
-import styles from './style.module.less';
+  createSignal,
+  onCleanup,
+  onMount,
+} from "solid-js";
+import styles from "./style.module.less";
+import generateObserveThresholds from "$utils/observe-threshold";
 
 const renderDevFootprint = (id: string): JSX.Element => {
   const isDev = import.meta.env.DEV;
-  // eslint-disable-next-line solid/components-return-once
-  if (!isDev) return <></>;
+
+  if (!isDev) {
+    return <></>;
+  }
 
   const footprintStyle: JSX.CSSProperties = {
-    position: 'absolute',
-    padding: '10px',
-    margin: '10px',
-    'font-size': '1.2rem',
-    'z-index': 10,
-    'border-radius': '5px',
-    'backdrop-filter': 'blur(25px)',
-    '-webkit-backdrop-filter': 'blur(25px)',
-    'overflow-x': 'scroll',
+    "position": "absolute",
+    "padding": "10px",
+    "margin": "10px",
+    "font-size": "1.2rem",
+    "z-index": 10,
+    "border-radius": "5px",
+    "backdrop-filter": "blur(25px)",
+    "-webkit-backdrop-filter": "blur(25px)",
+    "overflow-x": "scroll",
   };
   const info = JSON.parse(id);
   return (
     <pre style={footprintStyle}>
-      <span style={{ color: 'blue' }}>{ info.chapterIndex }</span>
+      <span style={{ color: "blue" }}>{ info.chapterIndex }</span>
       &nbsp;&nbsp;
-      <span style={{ color: 'deeppink' }}>{ info.pageIndex }</span>
+      <span style={{ color: "deeppink" }}>{ info.pageIndex }</span>
     </pre>
   );
 };
 
 export type Props = {
-    src: string;
-    id: string;
-    alt?: string;
-    /** `<img>` size is determinate, start to load image content */
-    onLoadStart?: () => void;
-    /** image content loaded ➡️ `htmlImageElement.complete = true` */
-    onLoaded?: () => void;
-    /** image loaded error */
-    onError?: () => void;
-    /** IntersectionObserver's callback */
-    onIntersect?: (
-      intersectInfo: Pick<IntersectionObserverEntry, 'boundingClientRect' | 'intersectionRatio' | 'isIntersecting'>
-    ) => void;
-    /** intersection's relative root element ➡️ `IntersectionObserver.option.root` */
-    containerRef?: IntersectionObserverInit['root'];
-}
+  src: string;
+  id: string;
+  alt?: string;
+  /** `<img>` size is determinate, start to load image content */
+  onLoadStart?: () => void;
+  /** image content loaded ➡️ `htmlImageElement.complete = true` */
+  onLoaded?: () => void;
+  /** image loaded error */
+  onError?: () => void;
+  /** IntersectionObserver's callback */
+  onIntersect?: (
+    intersectInfo: Pick<IntersectionObserverEntry, "boundingClientRect" | "intersectionRatio" | "isIntersecting">
+  ) => void;
+  /** intersection's relative root element ➡️ `IntersectionObserver.option.root` */
+  containerRef?: IntersectionObserverInit["root"];
+};
 
 const PageImage: Component<Props> = (props) => {
   let imageRef: HTMLImageElement | undefined;
-  const [status, setStatus] = createSignal<'unload' | 'loading' | 'loaded' | 'error'>('unload');
+  const [status, setStatus] = createSignal<"unload" | "loading" | "loaded" | "error">("unload");
 
   // cancel <img> request
   const cancelImgRequest = () => {
-    if (!imageRef) return;
-    imageRef.src = '';
+    if (!imageRef) {
+      return;
+    }
+    imageRef.src = "";
   };
   onCleanup(cancelImgRequest); // cancel at component unmounted
   /* createEffect(on( // cancel at id changes
@@ -64,12 +74,12 @@ const PageImage: Component<Props> = (props) => {
   )); */
 
   const handleLoaded = () => {
-    setStatus('loaded');
+    setStatus("loaded");
     props.onLoaded?.();
   };
 
   const handleError = () => {
-    setStatus('error');
+    setStatus("error");
     props.onError?.();
   };
 
@@ -81,14 +91,18 @@ const PageImage: Component<Props> = (props) => {
         const currentStatus = status();
         // once <img>'s auto request get response, <img> will be resize to image's size
         // <img> height is 0 means this request hasn't get response
-        if (currentStatus !== 'unload' || imgHeight === 0) return;
+        if (currentStatus !== "unload" || imgHeight === 0) {
+          return;
+        }
         props.onLoadStart?.();
-        setStatus('loading');
+        setStatus("loading");
       });
     },
   );
   onMount(() => {
-    if (!imageRef) return;
+    if (!imageRef) {
+      return;
+    }
     resizeObserver.observe(imageRef);
   });
   onCleanup(() => resizeObserver.disconnect());
@@ -105,7 +119,9 @@ const PageImage: Component<Props> = (props) => {
     { threshold: generateObserveThresholds(0.0001) },
   );
   onMount(() => {
-    if (!wrapperRef) return;
+    if (!wrapperRef) {
+      return;
+    }
     intersectionObserver.observe(wrapperRef);
   });
   onCleanup(() => intersectionObserver.disconnect());
@@ -114,8 +130,8 @@ const PageImage: Component<Props> = (props) => {
     <div
       class={styles.image}
       classList={{
-        [styles.unload]: status() === 'unload',
-        [styles.loading]: status() === 'loading',
+        [styles.unload]: status() === "unload",
+        [styles.loading]: status() === "loading",
       }}
       ref={wrapperRef}
       data-id={props.id}

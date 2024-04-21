@@ -1,14 +1,14 @@
 {
-    "extends": "./tsconfig.json",
-    "compilerOptions": {
-        "outDir": "dist/scripts",
-        "noEmit": false,
-        "module": "CommonJS",
-        "types": [
-            "node"
-        ]
-    },
-    "files": [
-        "./src/data/crawler.ts"
-    ]
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "types": [
+      "node"
+    ],
+    "noEmit": false,
+    "outDir": "dist/scripts"
+  },
+  "files": [
+    "./src/data/crawler.ts"
+  ]
 }

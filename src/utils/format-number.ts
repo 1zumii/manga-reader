@@ -16,9 +16,11 @@
  * ```
  */
 const formatNumber = (n: number, digit: number): string => {
-  if (n.toString().length > digit) return n.toString();
+  if (n.toString().length > digit) {
+    return n.toString();
+  }
   const difference = digit - n.toString().length;
-  return `${'0'.repeat(difference)}${n}`;
+  return `${"0".repeat(difference)}${n}`;
 };
 
 export default formatNumber;

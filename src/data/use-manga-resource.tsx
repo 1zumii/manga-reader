@@ -1,8 +1,11 @@
+import type { ParentComponent, Resource } from "solid-js";
 import {
-  createContext, createResource, ParentComponent, Resource, useContext,
-} from 'solid-js';
-import { DATA_FILE } from '$src/constants';
-import { MangaInfo } from '$types/manga';
+  createContext,
+  createResource,
+  useContext,
+} from "solid-js";
+import { DATA_FILE } from "$src/constants";
+import type { MangaInfo } from "$types/manga";
 
 const OSS_BUCKET: string = import.meta.env.VITE_ALI_OSS_BUCKET_URL;
 
@@ -11,16 +14,18 @@ const fetchMangaResourceFromAliOss = async (): Promise<MangaInfo[]> => {
     const response = await fetch(
       `https://${OSS_BUCKET}/${DATA_FILE}`,
       {
-        method: 'GET', // ali-oss only accept `get`
-        headers: { Accept: 'application/json' },
+        method: "GET", // ali-oss only accept `get`
+        headers: { Accept: "application/json" },
       },
     );
-    if (response.status !== 200) throw new Error(`request status is ${response.status}`);
+    if (response.status !== 200) {
+      throw new Error(`request status is ${response.status}`);
+    }
 
     const responseData = await response.json() as MangaInfo[];
     return responseData;
   } catch (error) {
-    console.error('fetch from ali-oss failed', '\n', error);
+    console.error("fetch from ali-oss failed", "\n", error);
     return [];
   }
 };
@@ -28,7 +33,7 @@ const fetchMangaResourceFromAliOss = async (): Promise<MangaInfo[]> => {
 // TODO: maybe there is not need to do so much work,
 // to exclude `undefined` from context default value
 const CONTEXT_DEFAULT_PENDING = (() => undefined) as Resource<MangaInfo[]>;
-CONTEXT_DEFAULT_PENDING.state = 'pending';
+CONTEXT_DEFAULT_PENDING.state = "pending";
 CONTEXT_DEFAULT_PENDING.loading = true;
 const context = createContext<Resource<MangaInfo[]>>(CONTEXT_DEFAULT_PENDING);
 const { Provider } = context;

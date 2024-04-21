@@ -1,5 +1,5 @@
-import { createSignal } from 'solid-js';
-import { MangaInfo } from '$types/manga';
+import { createSignal } from "solid-js";
+import type { MangaInfo } from "$types/manga";
 
 const useDetailDrawer = () => {
   const [currentDetail, setCurrentDetail] = createSignal<MangaInfo | undefined>();

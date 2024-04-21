@@ -1,36 +1,34 @@
 {
   "compilerOptions": {
-    "baseUrl": "./",
-    "strict": true,
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "node",
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
     "jsx": "preserve",
     "jsxImportSource": "solid-js",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "paths": {
+      "$components/*": [
+        "./src/components/*"
+      ],
+      "$pages/*": [
+        "./src/pages/*"
+      ],
+      "$utils/*": [
+        "./src/utils/*"
+      ],
+      "$types/*": [
+        "./src/types/*"
+      ],
+      "$src/*": [
+        "./src/*"
+      ]
+    },
+    "resolveJsonModule": true,
     "types": [
       "vite/client"
     ],
+    "strict": true,
     "noEmit": true,
-    "isolatedModules": true,
-    "resolveJsonModule": true,
-    "paths": {
-      "$components/*": [
-        "src/components/*"
-      ],
-      "$pages/*": [
-        "src/pages/*"
-      ],
-      "$utils/*": [
-        "src/utils/*"
-      ],
-      "$types/*": [
-        "src/types/*"
-      ],
-      "$src/*": [
-        "src/*"
-      ],
-    }
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "isolatedModules": true
   }
 }

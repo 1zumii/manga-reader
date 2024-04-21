@@ -1,16 +1,18 @@
-import { Component, JSX } from 'solid-js';
-import styles from './style.module.less';
+import type { Component, JSX } from "solid-js";
+import styles from "./style.module.less";
 
 type Props = {
   class?: string;
   onSearch: (searchValue: string) => void;
-}
+};
 
 const SearchPanel: Component<Props> = (props) => {
   let inputRef: HTMLInputElement;
 
   const handleSearch: JSX.EventHandlerUnion<HTMLInputElement, KeyboardEvent> = (event) => {
-    if (event.code !== 'Enter') return;
+    if (event.code !== "Enter") {
+      return;
+    }
     props.onSearch(inputRef.value);
   };
 

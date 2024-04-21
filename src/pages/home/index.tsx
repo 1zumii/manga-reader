@@ -1,12 +1,14 @@
-import { createEffect, createSignal, For } from 'solid-js';
-import type { Component, JSX } from 'solid-js';
-import MangaDetailDrawer from '$components/detail-drawer';
-import useDetailDrawer from '$components/detail-drawer/use-detail-drawer';
-import UrlTransformer from '$src/data/url-transformer';
-import { useMangaResource } from '$src/data/use-manga-resource';
-import { MangaInfo } from '$types/manga';
-import SearchPanel from './components/search-panel';
-import styles from './style.module.less';
+import type { Component, JSX } from "solid-js";
+import { For, createEffect, createSignal } from "solid-js";
+
+import SearchPanel from "./components/search-panel";
+import styles from "./style.module.less";
+
+import MangaDetailDrawer from "$components/detail-drawer";
+import useDetailDrawer from "$components/detail-drawer/use-detail-drawer";
+import UrlTransformer from "$src/data/url-transformer";
+import { useMangaResource } from "$src/data/use-manga-resource";
+import type { MangaInfo } from "$types/manga";
 
 const useMangaListWithSearch = () => {
   const mangaResource = useMangaResource();
@@ -24,7 +26,9 @@ const useMangaListWithSearch = () => {
   };
 
   createEffect(() => {
-    if (mangaResource.loading) return;
+    if (mangaResource.loading) {
+      return;
+    }
     setSearchResult(mangaListAll());
   });
 

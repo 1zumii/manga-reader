@@ -1,18 +1,24 @@
+import type {
+  Component,
+} from "solid-js";
 import {
-  Component, For, Show, onMount,
-} from 'solid-js';
-import PageImage, { Props as PageImageProps } from '$components/page-image';
-import UrlTransformer from '$src/data/url-transformer';
-import { MangaPageImage } from '$types/manga';
-import useMangaInfo from './use-manga-info';
+  For,
+  Show,
+  onMount,
+} from "solid-js";
+import useMangaInfo from "./use-manga-info";
 import {
   calcScrollTop,
   generatePageImageId,
   getDisplayElements,
   isBeforeCurrentPage,
   isSamePageImage,
-} from './utils';
-import styles from './style.module.less';
+} from "./utils";
+import styles from "./style.module.less";
+import type { Props as PageImageProps } from "$components/page-image";
+import PageImage from "$components/page-image";
+import UrlTransformer from "$src/data/url-transformer";
+import type { MangaPageImage } from "$types/manga";
 
 const TRIGGER_UPDATE_RATIO = 0.05;
 
@@ -34,10 +40,14 @@ const Reader: Component = () => {
   let containerRef: HTMLDivElement | undefined;
   onMount(() => {
     const currentReading = readingInfo();
-    if (!currentReading) return;
+    if (!currentReading) {
+      return;
+    }
 
     const displayElements = getDisplayElements(containerRef);
-    if (!displayElements) return;
+    if (!displayElements) {
+      return;
+    }
     const currentReadingElement = displayElements.find(
       (e) => isSamePageImage(e.pageInfo, currentReading),
     );
@@ -67,25 +77,35 @@ const Reader: Component = () => {
 
   // observe current reading page scroll
   const handlePageIntersect = (
-    info: Parameters<NonNullable<PageImageProps['onIntersect']>>[0] & { pageInfo: MangaPageImage },
+    info: Parameters<NonNullable<PageImageProps["onIntersect"]>>[0] & { pageInfo: MangaPageImage },
   ): void => {
     const { pageInfo, boundingClientRect, intersectionRatio } = info;
     const currentReading = readingInfo();
-    if (!currentReading) return;
-    if (!isSamePageImage(currentReading, pageInfo)) return;
+    if (!currentReading) {
+      return;
+    }
+    if (!isSamePageImage(currentReading, pageInfo)) {
+      return;
+    }
 
     /* update current reading page image */
     // update display pages but no scroll, prevent auto trigger next round update and dead cycle
-    if (currentReadingElementClientTop === boundingClientRect.top) return;
+    if (currentReadingElementClientTop === boundingClientRect.top) {
+      return;
+    }
 
     currentReadingElementClientTop = boundingClientRect.top;
 
     // page's display ratio still not trigger update
-    if (intersectionRatio >= TRIGGER_UPDATE_RATIO) return;
+    if (intersectionRatio >= TRIGGER_UPDATE_RATIO) {
+      return;
+    }
 
-    if (!containerRef) return;
+    if (!containerRef) {
+      return;
+    }
 
-    const direction: Parameters<typeof handleReadingInfoChange>[0] = boundingClientRect.top > 0 ? 'prev' : 'next';
+    const direction: Parameters<typeof handleReadingInfoChange>[0] = boundingClientRect.top > 0 ? "prev" : "next";
     const previousReading = currentReading;
     const previousContainerScrollTop = containerRef.scrollTop;
     const previousReadingElementClientTop = currentReadingElementClientTop;
@@ -95,13 +115,17 @@ const Reader: Component = () => {
       // use `requestAnimationFrame` instead of `queueMicroTask`,
       // for deferring data update closer to rendering.
       () => requestAnimationFrame(() => {
-        if (!containerRef) return;
+        if (!containerRef) {
+          return;
+        }
         const currentContainerScrollTop = containerRef.scrollTop;
         // scrollTop has changed after update pages and before rerender(rAF call)
         const scrollOffset = currentContainerScrollTop - previousContainerScrollTop;
 
         const displayElements = getDisplayElements(containerRef);
-        if (!displayElements) return;
+        if (!displayElements) {
+          return;
+        }
         const elementsScrolledUp = displayElements.filter(
           (e) => isBeforeCurrentPage(previousReading, e.pageInfo),
         );
@@ -109,9 +133,11 @@ const Reader: Component = () => {
         const currentReadingElementIndex = displayElements.findIndex(
           (e) => isSamePageImage(currentReading, e.pageInfo),
         );
-        if (currentReadingElementIndex === -1) return;
+        if (currentReadingElementIndex === -1) {
+          return;
+        }
 
-        const nextReadingElementIndex = direction === 'prev'
+        const nextReadingElementIndex = direction === "prev"
           ? Math.max(currentReadingElementIndex - 1, -1)
           : Math.min(currentReadingElementIndex + 1, displayElements.length);
         const nextReadingElement = displayElements[nextReadingElementIndex];

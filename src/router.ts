@@ -1,15 +1,15 @@
-import type { RouteDefinition } from '@solidjs/router';
-import { lazy } from 'solid-js';
-import { MangaPageImage } from '$src/types/manga';
+import type { RouteDefinition } from "@solidjs/router";
+import { lazy } from "solid-js";
+import type { MangaPageImage } from "$src/types/manga";
 
 const routes: RouteDefinition[] = [
   {
-    path: '/',
-    component: lazy(() => import('./pages/home')),
+    path: "/",
+    component: lazy(() => import("./pages/home")),
   },
   {
-    path: '/read/:mangaId/:chapterIndex/:pageIndex',
-    component: lazy(() => import('./pages/reader')),
+    path: "/read/:mangaId/:chapterIndex/:pageIndex",
+    component: lazy(() => import("./pages/reader")),
   },
 ];
 
@@ -20,7 +20,7 @@ export const getReaderNavigateLink = (to: MangaPageImage): string => {
 
 export const getReaderUrlParams = (): Record<keyof MangaPageImage, string> => {
   const path = window.location.hash;
-  const paramList = path.split('/read/')[1]?.split('/');
+  const paramList = path.split("/read/")[1]?.split("/");
   return {
     mangaId: paramList[0],
     chapterIndex: paramList[1],
@@ -31,7 +31,7 @@ export const getReaderUrlParams = (): Record<keyof MangaPageImage, string> => {
 // update url but not trigger page reload
 export const updateReaderUrlParams = (next: MangaPageImage): void => {
   const nextRoute = `${window.location.pathname}#${getReaderNavigateLink(next)}`;
-  window.history.replaceState({}, '', nextRoute);
+  window.history.replaceState({}, "", nextRoute);
 };
 
 export default routes;
