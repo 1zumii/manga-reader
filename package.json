@@ -2,7 +2,6 @@
   "name": "manga-reader",
   "type": "module",
   "private": true,
-  "packageManager": "pnpm@9.0.4",
   "license": "MIT",
   "engines": {
     "node": "18"
