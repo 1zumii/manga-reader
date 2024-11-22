@@ -4,14 +4,13 @@
   "private": true,
   "license": "MIT",
   "engines": {
-    "node": "18"
+    "node": "23"
   },
   "scripts": {
     "build:common": "pnpm --filter=common run build",
     "dev": "pnpm --filter=web run dev",
     "build": "pnpm --filter=web run build",
     "preview": "pnpm --filter=web run preview",
-    "build:crawler": "pnpm --filter=crawler run build",
     "start:crawler": "pnpm --filter=crawler run crawler",
     "update-hook": "simple-git-hooks",
     "lint": "eslint ./",

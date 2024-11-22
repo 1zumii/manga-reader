@@ -3,18 +3,12 @@
   "type": "module",
   "private": "true",
   "exports": {
-    ".": "./dist/index.js"
+    ".": "./src/index.ts"
   },
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "pnpm run clean && pnpm run build:script && pnpm run build:type",
+    "build": "pnpm run clean && pnpm run build:type",
     "clean": "rm -rf ./dist/",
-    "build:script": "swc ./src -d ./dist && mv ./dist/src/* ./dist/ && rm -rf ./dist/src/",
     "build:type": "tsc"
-  },
-  "devDependencies": {
-    "@swc/cli": "^0.3.12",
-    "@swc/core": "~1.4.16",
-    "swc-plugin-transform-module-specifiers": "^0.1.1"
   }
 }

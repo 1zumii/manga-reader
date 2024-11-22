@@ -15,10 +15,10 @@ jobs:
       - name: setup node
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 23
 
       - name: setup pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v4
         with:
           version: 9
 
@@ -29,7 +29,6 @@ jobs:
 
       - name: crawler
         run: |
-          pnpm run build:crawler
           pnpm run start:crawler
           cp ./packages/crawler/manga-info.json ./
 

@@ -217,6 +217,6 @@ const queryMangaList = async (pageIndex: number): Promise<MangaInfo[]> => {
     console.log(chalk.bgGreen(" DONE "), "write JSON", chalk.cyan(mangaInfoList.length));
   } catch (error) {
     console.error("\n");
-    console.error(chalk.bgRed(" ERROR "), "write JSON failed");
+    console.error(chalk.bgRed(" ERROR "), "write JSON failed", "\n", error);
   }
 })();
