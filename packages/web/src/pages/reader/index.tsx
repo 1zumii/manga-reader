@@ -146,7 +146,10 @@ const Reader: Component = () => {
           elementsScrolledUp,
           previousReadingElementClientTop - scrollOffset,
         );
-        containerRef?.scrollTo({ top: nextContainerScrollTop });
+        // containerRef?.scrollTo({ top: nextContainerScrollTop });
+        if (containerRef) {
+          containerRef.scrollTop = nextContainerScrollTop;
+        }
 
         const elementsBeforeNextReading = displayElements.filter(
           (e) => isBeforeCurrentPage(nextReadingElement.pageInfo, e.pageInfo),

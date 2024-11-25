@@ -31,12 +31,11 @@ const fetchMangaResourceFromAliOss = async (): Promise<MangaInfo[]> => {
   }
 };
 
-// TODO: maybe there is not need to do so much work,
-// to exclude `undefined` from context default value
-const CONTEXT_DEFAULT_PENDING = (() => undefined) as Resource<MangaInfo[]>;
-CONTEXT_DEFAULT_PENDING.state = "pending";
-CONTEXT_DEFAULT_PENDING.loading = true;
-const context = createContext<Resource<MangaInfo[]>>(CONTEXT_DEFAULT_PENDING);
+const CONTEXT_DEFAULT_RESOURCE = (() => undefined) as Resource<MangaInfo[]>;
+CONTEXT_DEFAULT_RESOURCE.state = "pending";
+CONTEXT_DEFAULT_RESOURCE.loading = true;
+
+const context = createContext<Resource<MangaInfo[]>>(CONTEXT_DEFAULT_RESOURCE);
 const { Provider } = context;
 
 const MangaResourceProvider: ParentComponent = (props) => {
