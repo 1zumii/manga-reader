@@ -42,8 +42,10 @@ export type Props = {
   src: string;
   id: string;
   alt?: string;
+  /** top in absolute position's list wrapper */
+  offsetTop: number;
   /** `<img>` size is determinate, start to load image content */
-  onLoadStart?: () => void;
+  onLoadStart?: (imgHeight: number) => void;
   /** image content loaded ➡️ `htmlImageElement.complete = true` */
   onLoaded?: () => void;
   /** image loaded error */
@@ -94,7 +96,7 @@ const PageImage: Component<Props> = (props) => {
         if (currentStatus !== "unload" || imgHeight === 0) {
           return;
         }
-        props.onLoadStart?.();
+        props.onLoadStart?.(imgHeight);
         setStatus("loading");
       });
     },
@@ -134,6 +136,7 @@ const PageImage: Component<Props> = (props) => {
         [styles.loading]: status() === "loading",
       }}
       ref={wrapperRef}
+      style={{ top: `${props.offsetTop}px` }}
       data-id={props.id}
     >
       { renderDevFootprint(props.id) }

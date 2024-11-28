@@ -1,183 +1,290 @@
-import type { MangaPageImage } from "@manga-reader/common";
+import type { MangaChapter, MangaInfo, MangaPageImage } from "@manga-reader/common";
 import type {
   Component,
+  JSX,
 } from "solid-js";
 import {
   For,
   Show,
-  onMount,
+  batch,
+  createEffect,
+  createSignal,
 } from "solid-js";
-import type { Props as PageImageProps } from "../../components/page-image";
+import { throttle } from "radash";
 import PageImage from "../../components/page-image";
 import UrlTransformer from "../../data/url-transformer";
-import styles from "./style.module.less";
 import useMangaInfo from "./use-manga-info";
 import {
-  calcScrollTop,
   generatePageImageId,
-  getDisplayElements,
-  isBeforeCurrentPage,
-  isSamePageImage,
+  getAdjacentPages,
+  getInitReadingInfo,
 } from "./utils";
+import styles from "./style.module.less";
+import { updateReaderUrlParams } from "$src/router";
 
-const TRIGGER_UPDATE_RATIO = 0.05;
+type ChapterIndex = MangaChapter["index"];
+type PageId = `${ChapterIndex}-${number}`;
+type DisplayPage = MangaPageImage & {
+  offsetTop: number;
+  height: number;
+};
+
+const encodePageId = (
+  { chapterIndex, pageIndex }: {
+    chapterIndex: number;
+    pageIndex: number;
+  },
+): PageId => `${chapterIndex}-${pageIndex}`;
+/* const decodePageId = (id: PageId): {
+  chapterIndex: number;
+  pageIndex: number;
+} => {
+  const [chapterIndex, pageIndex] = id.split("-").map((part) => Number(part));
+  return { chapterIndex, pageIndex };
+}; */
+
+const DEFAULT_PAGE_HEIGHT = 888; // use as loading image's height (px)
+const BUFFER_PAGE_NUM = 2;
 
 const Reader: Component = () => {
-  const {
-    mangaResource,
-    readingInfo,
-    displayPageImages,
-    handleReadingInfoChange,
-  } = useMangaInfo();
-
-  /**
-   * store latest clientTop of current reading element
-   * 1. once PageImage resize, reset container.scrollTop to previous value before resize
-   * 2. at current reading page changing, set this variable to next reading page's element.clientTop
-   */
-  let currentReadingElementClientTop: number;
+  const { currentManga } = useMangaInfo();
 
   let containerRef: HTMLDivElement | undefined;
-  onMount(() => {
-    const currentReading = readingInfo();
-    if (!currentReading) {
+
+  const pageHeights = new Map<PageId, number>();
+  const chapterHeights = new Map<ChapterIndex, number>();
+
+  const calcListHeight = (manga: MangaInfo): number => (
+    manga.chapters.reduce(
+      (height, chapter) => {
+        const chapterSumHeight = chapterHeights.get(chapter.index)
+          ?? chapter.total * DEFAULT_PAGE_HEIGHT;
+        return height + chapterSumHeight;
+      },
+      0,
+    )
+  );
+
+  const [listHeight, setListHeight] = createSignal(0);
+
+  const [displayPages, setDisplayPages] = createSignal<DisplayPage[]>([]);
+
+  createEffect(() => {
+    const pages = displayPages();
+    const firstPage = pages[BUFFER_PAGE_NUM];
+
+    if (!firstPage) {
       return;
     }
 
-    const displayElements = getDisplayElements(containerRef);
-    if (!displayElements) {
-      return;
-    }
-    const currentReadingElement = displayElements.find(
-      (e) => isSamePageImage(e.pageInfo, currentReading),
-    );
+    // DEBUG:
+    // eslint-disable-next-line no-console
+    console.log(pages);
 
-    currentReadingElementClientTop = 0;
-    currentReadingElement?.element.scrollIntoView(true);
+    updateReaderUrlParams(firstPage);
   });
 
-  /*  const handlePageStartLoad = (pageInfo: MangaPageImage): void => {
-    const currentReading = readingInfo();
-    if (!currentReading) return;
-    if (!isBeforeCurrentPage(currentReading, pageInfo)) return;
+  const handleContainerScroll = (scrollTop: number): void => {
+    // DEBUG:
+    // eslint-disable-next-line no-console
+    console.log("handleContainerScroll", { scrollTop });
 
-    const displayElements = getDisplayElements(containerRef);
-    if (!displayElements) return;
-    const previousElements = displayElements.filter(
-      (e) => isBeforeCurrentPage(currentReading, e.pageInfo),
+    const manga = currentManga();
+    if (!manga) {
+      return;
+    }
+
+    const containerHeight = window.innerHeight;
+
+    // update displayPages
+    const pages: DisplayPage[] = [];
+
+    let offsetTop = 0;
+    for (const chapter of manga.chapters) {
+      const chapterSumHeight = chapterHeights.get(chapter.index)
+        ?? chapter.total * DEFAULT_PAGE_HEIGHT;
+
+      if (offsetTop + chapterSumHeight < scrollTop) {
+        offsetTop += chapterSumHeight;
+      } else if (offsetTop - scrollTop >= containerHeight) {
+        break;
+      } else {
+        for (let pageIndex = 1; pageIndex <= chapter.total; pageIndex++) { // 页码从 1 开始
+          const pageHeight = pageHeights.get(
+            encodePageId({ chapterIndex: chapter.index, pageIndex }),
+          ) ?? DEFAULT_PAGE_HEIGHT;
+
+          offsetTop += pageHeight;
+
+          if (offsetTop - scrollTop >= containerHeight) {
+            // out container
+            break;
+          }
+
+          if (offsetTop >= scrollTop) {
+            // found start page
+            pages.push({
+              mangaId: manga.id,
+              chapterIndex: chapter.index,
+              pageIndex,
+              offsetTop,
+              height: pageHeight,
+            });
+          }
+        }
+      }
+    }
+
+    const firstVisiblePage = pages[0];
+    const previousBufferPages = getAdjacentPages(firstVisiblePage, "prev", BUFFER_PAGE_NUM, manga.chapters);
+    previousBufferPages.reverse();
+    let previousOffsetTop = firstVisiblePage.offsetTop;
+    const previouses = previousBufferPages.map((page) => {
+      const { chapterIndex, pageIndex } = page;
+      const pageHeight = pageHeights.get(
+        encodePageId({ chapterIndex, pageIndex }),
+      ) ?? DEFAULT_PAGE_HEIGHT;
+
+      previousOffsetTop -= pageHeight;
+
+      const displayPage: DisplayPage = {
+        ...page,
+        offsetTop: previousOffsetTop,
+        height: pageHeight,
+      };
+
+      return displayPage;
+    });
+    previouses.reverse();
+    pages.unshift(...previouses);
+
+    const lastVisiblePage = pages.at(-1)!;
+    const followingBufferPages = getAdjacentPages(lastVisiblePage, "next", BUFFER_PAGE_NUM, manga.chapters);
+    let followingOffsetTop = lastVisiblePage.offsetTop + lastVisiblePage.height;
+    const followings = followingBufferPages.map((page) => {
+      const { chapterIndex, pageIndex } = page;
+      const pageHeight = pageHeights.get(
+        encodePageId({ chapterIndex, pageIndex }),
+      ) ?? DEFAULT_PAGE_HEIGHT;
+
+      const displayPage: DisplayPage = {
+        ...page,
+        offsetTop: followingOffsetTop,
+        height: pageHeight,
+      };
+
+      followingOffsetTop += pageHeight;
+
+      return displayPage;
+    });
+    pages.push(...followings);
+
+    // update list height
+    const nextListHeight = calcListHeight(manga);
+
+    // batch update
+    batch(() => {
+      setDisplayPages(pages);
+      setListHeight(nextListHeight);
+    });
+  };
+
+  // run once on mounted
+  createEffect(() => {
+    const manga = currentManga();
+
+    if (!manga) {
+      setListHeight(0);
+      return;
+    }
+
+    setListHeight(
+      calcListHeight(manga),
     );
 
-    // reset current page's clientTop, prevent window scroll once page image resize(because of load)
-    requestAnimationFrame(() => {
-      containerRef?.scrollTo({
-        top: calcScrollTop(previousElements, currentReadingElementClientTop),
-      });
-    });
-  }; */
+    // DEBUG:
+    // eslint-disable-next-line no-console
+    console.log("set initial scrollTop");
 
-  // observe current reading page scroll
-  const handlePageIntersect = (
-    info: Parameters<NonNullable<PageImageProps["onIntersect"]>>[0] & { pageInfo: MangaPageImage },
-  ): void => {
-    const { pageInfo, boundingClientRect, intersectionRatio } = info;
-    const currentReading = readingInfo();
-    if (!currentReading) {
-      return;
-    }
-    if (!isSamePageImage(currentReading, pageInfo)) {
-      return;
-    }
+    // initial scrollTop
+    const firstVisiblePage = getInitReadingInfo()!;
 
-    /* update current reading page image */
-    // update display pages but no scroll, prevent auto trigger next round update and dead cycle
-    if (currentReadingElementClientTop === boundingClientRect.top) {
-      return;
-    }
+    const initScrollTop = manga.chapters.reduce(
+      (height, chapter) => {
+        if (chapter.index !== firstVisiblePage.chapterIndex) { // TODO: 可能要包含前后两个 chapter
+          const chapterSumHeight = chapterHeights.get(chapter.index)
+            ?? chapter.total * DEFAULT_PAGE_HEIGHT;
+          return height + chapterSumHeight;
+        }
 
-    currentReadingElementClientTop = boundingClientRect.top;
-
-    // page's display ratio still not trigger update
-    if (intersectionRatio >= TRIGGER_UPDATE_RATIO) {
-      return;
-    }
+        return height + Array
+          .from({ length: chapter.total })
+          .reduce<number>(
+            (chapterSumHeight, _, pageIndex) => {
+              const pageHeight = pageHeights.get(
+                encodePageId({ chapterIndex: chapter.index, pageIndex }),
+              ) ?? DEFAULT_PAGE_HEIGHT;
+              return chapterSumHeight + pageHeight;
+            },
+            0,
+          );
+      },
+      0,
+    );
 
     if (!containerRef) {
       return;
     }
+    containerRef.scrollTop = initScrollTop;
+    handleContainerScroll(initScrollTop); // trigger container's scroll event
+  });
 
-    const direction: Parameters<typeof handleReadingInfoChange>[0] = boundingClientRect.top > 0 ? "prev" : "next";
-    const previousReading = currentReading;
-    const previousContainerScrollTop = containerRef.scrollTop;
-    const previousReadingElementClientTop = currentReadingElementClientTop;
+  const throttledScrollHandler = throttle(
+    { interval: 50 },
+    ((e) => {
+      const container = e.target;
+      if (!container) {
+        return;
+      }
 
-    handleReadingInfoChange(
-      direction,
-      // use `requestAnimationFrame` instead of `queueMicroTask`,
-      // for deferring data update closer to rendering.
-      () => requestAnimationFrame(() => {
-        if (!containerRef) {
-          return;
-        }
-        const currentContainerScrollTop = containerRef.scrollTop;
-        // scrollTop has changed after update pages and before rerender(rAF call)
-        const scrollOffset = currentContainerScrollTop - previousContainerScrollTop;
+      handleContainerScroll(container.scrollTop);
+    }) satisfies JSX.EventHandler<HTMLDivElement, Event>,
+  );
 
-        const displayElements = getDisplayElements(containerRef);
-        if (!displayElements) {
-          return;
-        }
-        const elementsScrolledUp = displayElements.filter(
-          (e) => isBeforeCurrentPage(previousReading, e.pageInfo),
-        );
+  const handlePageStartLoad = (page: MangaPageImage, height: number): void => {
+    const pageId = encodePageId(page);
 
-        const currentReadingElementIndex = displayElements.findIndex(
-          (e) => isSamePageImage(currentReading, e.pageInfo),
-        );
-        if (currentReadingElementIndex === -1) {
-          return;
-        }
+    if (pageHeights.has(pageId)) {
+      return;
+    }
 
-        const nextReadingElementIndex = direction === "prev"
-          ? Math.max(currentReadingElementIndex - 1, -1)
-          : Math.min(currentReadingElementIndex + 1, displayElements.length);
-        const nextReadingElement = displayElements[nextReadingElementIndex];
+    // TODO:
 
-        const nextContainerScrollTop = calcScrollTop(
-          elementsScrolledUp,
-          previousReadingElementClientTop - scrollOffset,
-        );
-        // containerRef?.scrollTo({ top: nextContainerScrollTop });
-        if (containerRef) {
-          containerRef.scrollTop = nextContainerScrollTop;
-        }
-
-        const elementsBeforeNextReading = displayElements.filter(
-          (e) => isBeforeCurrentPage(nextReadingElement.pageInfo, e.pageInfo),
-        );
-
-        // previous elements' height sum - next container's scrollTop
-        currentReadingElementClientTop = elementsBeforeNextReading.reduce(
-          (sum, e) => sum + e.height,
-          -nextContainerScrollTop,
-        );
-      }),
-    );
+    pageHeights.set(pageId, height);
+    // TODO: chapterHeight.set()
   };
 
   return (
-    <Show when={!mangaResource.loading}>
-      <div ref={containerRef} class={styles.readView}>
-        <For each={displayPageImages()}>
-          { (page) => (
-            <PageImage
-              id={generatePageImageId(page)}
-              src={UrlTransformer.getPageImage(page)}
-              containerRef={containerRef}
-              // onLoadStart={() => handlePageStartLoad(page)}
-              onIntersect={(info) => handlePageIntersect({ ...info, pageInfo: page })}
-            />
-          ) }
-        </For>
+    <Show when={currentManga()}>
+      <div
+        ref={containerRef}
+        class={styles.readView}
+        onScroll={throttledScrollHandler}
+      >
+        <div class={styles.imageList} style={{ height: `${listHeight()}px` }}>
+          <For each={displayPages()}>
+            { (page) => (
+              <PageImage
+                id={generatePageImageId(page)}
+                src={UrlTransformer.getPageImage(page)}
+                containerRef={containerRef}
+                offsetTop={page.offsetTop}
+                onLoadStart={(height) => handlePageStartLoad(page, height)}
+              // onIntersect={(info) => handlePageIntersect({ ...info, pageInfo: page })}
+              />
+            ) }
+          </For>
+        </div>
       </div>
     </Show>
   );
